@@ -40,7 +40,7 @@ Seven days, 2026-09-26 to 2026-10-03. Owners use the member labels from
 | Day | Date | Planned work | Owner | Exit condition | Actual |
 |---|---|---|---|---|---|
 | D1 | Fri 26 Sep | **P1** SRS, use cases, architecture + 5 ADRs, wireframes, project plan, AI disclosure | All (A leads) | Every FR has an ID, a priority and a traceability row | ✅ **Complete** — committed 26 Sep, design artifacts committed before any implementation code |
-| D2 | Sat 27 Sep | **P2** 25 tables, constraints, `reset.sh`; **P3** seed script started | A | `./db/reset.sh` builds all 25 tables from empty, zero errors | ⬜ Not started |
+| D2 | Sat 27 Sep | **P2** 25 tables, constraints, `reset.sh`; **P3** seed script started | A | `./db/reset.sh` builds all 25 tables from empty, zero errors | ✅ **P2 complete, a day early** (26 Sep) — 25 tables, 108 constraints (45 check, 29 FK) build from empty in ~1s against PostgreSQL 16.13; verified idempotent over repeated runs and on `--test`. P3 seed script not started. |
 | D3 | Sun 28 Sep | **P3** seeding to target row counts; **P4** triggers and procedures | A | Row counts match the brief; `book_package` decrements seats, cancel restores them | ⬜ Not started |
 | D4 | Mon 29 Sep | **P5** roles and grants; **P6** pools, `runTraced`, auth routes | A, B | `psql -U app_agent -c "DELETE FROM booking"` is refused by PostgreSQL | ⬜ Not started |
 | D5 | Tue 30 Sep | **P6** catalogue, departure, booking, payment routes | B | Every data endpoint returns all seven traced keys | ⬜ Not started |
@@ -77,20 +77,21 @@ Post-mid-semester work for the full DBMS submission.
 
 | Measure | Status |
 |---|---|
-| Overall completion | ≈ 8% (requirements and design baselined; no implementation code yet) |
-| Phases complete | P1 |
+| Overall completion | ≈ 15% (requirements and design baselined; database schema built and verified) |
+| Phases complete | P1, P2 |
 | Phases in progress | — |
-| Phases not started | P2 – P13 |
+| Phases not started | P3 – P13 |
 | End-to-end feature | Not yet working — target D6 (1 Oct) |
 | Automated tests | 0 written — target D7 (2 Oct) |
-| Mid-semester deliverables complete | 6 of 19 checklist items (SRS, use cases, architecture, wireframes, plan, AI disclosure) |
+| Mid-semester deliverables complete | 7 of 19 checklist items (SRS, use cases, architecture, wireframes, plan, AI disclosure, 25 tables built by `reset.sh`) |
 
 ### Delayed or pending tasks
 
-Nothing is delayed against this baseline, because the baseline is one day old. The honest
-statement of position is different and more useful: **the entire implementation is ahead of us
-with seven days to run.** P2 through P9 are all pending. The critical path is
-P2 → P4 → P6 → P7, and P7 is the deliverable the evaluation actually requires.
+Nothing is delayed. P2 completed on 26 September, a day ahead of its D2 slot, which buys back
+part of the zero-slack problem in R-01 but does not remove it. The honest statement of position
+is still that **most of the implementation is ahead of us with seven days to run**: P3 through
+P9 are pending. The critical path is P4 → P6 → P7, and P7 is the deliverable the evaluation
+actually requires.
 
 ---
 
@@ -135,7 +136,7 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 | Week ending | Planned | Achieved | Variance | Corrective action |
 |---|---|---|---|---|
 | 2026-09-26 | Baseline requirements and design artifacts (P1) | SRS with 30 FRs, 12 NFRs and a full traceability matrix; 21 use cases with 5 detailed descriptions; architecture with 5 ADRs; 5 wireframes; this plan; AI disclosure. All committed before any implementation code. | None — P1 complete on the day it was planned | Proceed to P2 on 27 Sep |
-| 2026-10-03 | P2 – P9; submit mid-semester package | *(pending)* | | |
+| 2026-10-03 | P2 – P9; submit mid-semester package | P2 complete 26 Sep: 25 tables, 108 constraints, `reset.sh` verified idempotent and asserting its own exit condition. Constraint behaviour spot-checked — 12 invalid writes rejected, including a negative seat count and a second cancellation of one booking. | P2 a day early | Continue to P3 (seed) and P4 (triggers, procedures) |
 | 2026-10-10 | W1: showcase queries q01–q08, views, indexes | *(pending)* | | |
 
 ---
@@ -145,7 +146,7 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 | Milestone | Planned date | Status |
 |---|---|---|
 | M1 — Requirements and design baselined | 2026-09-26 | ✅ Met |
-| M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | ⬜ Pending |
+| M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | 🟡 Partly met — schema and constraints build from empty (26 Sep); triggers and procedures are P4 |
 | M3 — API returns traced responses on every data route | 2026-09-30 | ⬜ Pending |
 | M4 — End-to-end feature working (register → search → book → view) | 2026-10-01 | ⬜ Pending |
 | M5 — Test suite green, including the concurrency test | 2026-10-02 | ⬜ Pending |
