@@ -45,7 +45,7 @@ Seven days, 2026-09-26 to 2026-10-03. Owners use the member labels from
 | D4 | Mon 29 Sep | **P5** roles and grants; **P6** pools, `runTraced`, auth routes | A, B | `psql -U app_agent -c "DELETE FROM booking"` is refused by PostgreSQL | ✅ **P5 complete, three days early** (26 Sep) — 5 roles; agent DELETE refused with SQLSTATE 42501; full privilege matrix verified across all five roles. **P6 not started.** |
 | D5 | Tue 30 Sep | **P6** catalogue, departure, booking, payment routes | B | Every data endpoint returns all seven traced keys | ✅ **P6 complete, four days early** (26 Sep) — 9 endpoints verified returning all seven keys with `$n` placeholders intact; full register→search→book→view path exercised against the seeded database. |
 | D6 | Wed 1 Oct | **P7** login, catalogue, package detail, booking flow, my bookings, `<QueryTrace>` | C | A user can register, search, book and see the booking, with SQL visible at each step | ✅ **P7 complete, five days early** (26 Sep) — 7 screens; the full path driven in headless Chromium with no console errors and 9 screenshots captured as evidence. **This is the end-to-end feature the evaluation requires.** |
-| D7 | Thu 2 Oct | **P8** test suite incl. concurrency test; generate `test_cases.md`; **P9** UML, README, Compose | D | 25+ tests pass; the table is generated from a real run | ⬜ Not started |
+| D7 | Thu 2 Oct | **P8** test suite incl. concurrency test; generate `test_cases.md`; **P9** UML, README, Compose | D | 25+ tests pass; the table is generated from a real run | ✅ **P8 complete, six days early** (26 Sep) — **95 tests passing** in 8 files, well past the 25 minimum; `docs/test_cases.md` generated from vitest's JSON reporter with a 75.2% statement coverage summary. **P9 not started.** |
 | — | Fri 3 Oct | **P9** report assembly, screenshots, demo video, ZIP packaging, **submit** | All | Clean clone runs from the README alone; ZIP opens correctly | ⬜ Not started |
 
 **Buffer.** There is none inside the seven days. The mitigation for that is R-01: the
@@ -77,10 +77,10 @@ Post-mid-semester work for the full DBMS submission.
 
 | Measure | Status |
 |---|---|
-| Overall completion | ≈ 62% (database, API and the end-to-end user interface all working) |
-| Phases complete | P1 – P7 |
+| Overall completion | ≈ 72% (database, API, UI and a 95-test automated suite) |
+| Phases complete | P1 – P8 |
 | Phases in progress | — |
-| Phases not started | P8 – P13 |
+| Phases not started | P9 – P13 |
 
 **The mid-semester requirement is met.** A user can register, search the catalogue, open a
 package, book a departure and see the booking, with the executed SQL visible at every step —
@@ -95,15 +95,17 @@ trigger maintains the count. Building P3 first would have meant writing seat ari
 Python that P4 then made redundant. No deliverable moved; only the order did.
 | End-to-end feature | Not yet working — target D6 (1 Oct) |
 | Automated tests | 0 written — target D7 (2 Oct) |
-| Mid-semester deliverables complete | 13 of 19 checklist items (adds: the working end-to-end feature, and `<QueryTrace>` on every data screen with placeholders uninterpolated) |
+| Mid-semester deliverables complete | 15 of 19 checklist items (adds: 95 automated tests including the concurrency test, and `docs/test_cases.md` generated from a real run with coverage) |
 
 ### Delayed or pending tasks
 
 Nothing is delayed. P2 completed on 26 September, a day ahead of its D2 slot, which buys back
 part of the zero-slack problem in R-01 but does not remove it. The honest statement of position
-is still that **the whole application layer is ahead of us with seven days to run**: P5 through
-P9 are pending and no line of JavaScript exists yet. The critical path is P6 → P7, and P7 is
-the deliverable the evaluation actually requires. The database half of the project is done.
+has changed: the system, its interface and its test suite all exist and are verified. What is
+left before 3 October is **P9 — packaging and paperwork**: Docker Compose, the UML diagrams,
+the normalization document, the report PDF and the demonstration video. None of it is
+engineering risk; all of it takes time, and the report and video cannot be rushed on the last
+evening.
 
 ---
 
@@ -161,7 +163,7 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 | M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | ✅ Met early (26 Sep) — 25 tables, 4 triggers, 2 procedures, 5 roles; concurrency, refund tiers and the privilege matrix all verified |
 | M3 — API returns traced responses on every data route | 2026-09-30 | ✅ Met early (26 Sep) — 9 endpoints, all seven keys, verified |
 | M4 — End-to-end feature working (register → search → book → view) | 2026-10-01 | ✅ Met early (26 Sep) — driven end to end in headless Chromium, screenshots in `docs/screenshots/` |
-| M5 — Test suite green, including the concurrency test | 2026-10-02 | ⬜ Pending |
+| M5 — Test suite green, including the concurrency test | 2026-10-02 | ✅ Met early (26 Sep) — 95 passing, including TC-C-01 to TC-C-04 |
 | M6 — Mid-semester package submitted | 2026-10-03 | ⬜ Pending |
 | M7 — Showcase queries, views and indexes complete | 2026-10-19 | ⬜ Pending |
 | M8 — Full front end complete | 2026-11-09 | ⬜ Pending |
