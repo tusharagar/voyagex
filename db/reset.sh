@@ -51,11 +51,35 @@ done
 
 # --- Configuration ---------------------------------------------------------
 # .env is git-ignored; .env.example documents every variable with dummy values.
+# Parsed line by line rather than `source`d, for two reasons:
+#
+#   1. A variable already set in the environment wins over the file. `source`
+#      does the opposite, which contradicts how the API and the test suite read
+#      the same file, and would silently ignore anything Docker Compose or CI
+#      injected.
+#   2. Carriage returns are stripped. A .env written on Windows — or checked out
+#      with core.autocrlf=true — ends its lines with CRLF, and `source` would
+#      then set PGDATABASE to "travel_tourism\r". That connects to a database
+#      whose name really does end in a carriage return, and produces failures
+#      that look nothing like their cause.
+#
+# It also means a stray command in .env is data here, not something to execute.
 if [[ -f "$REPO_ROOT/.env" ]]; then
-    set -a
-    # shellcheck disable=SC1091
-    source "$REPO_ROOT/.env"
-    set +a
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"                       # strip a trailing CR
+        [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+        [[ "$line" == *=* ]] || continue
+        key="${line%%=*}"
+        value="${line#*=}"
+        key="${key//[[:space:]]/}"
+        [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+        # strip matching surrounding quotes, if any
+        value="${value%\"}"; value="${value#\"}"
+        value="${value%\'}"; value="${value#\'}"
+        # already set in the environment? leave it alone.
+        [[ -n "${!key:-}" ]] && continue
+        export "$key=$value"
+    done < "$REPO_ROOT/.env"
 fi
 
 PGHOST="${PGHOST:-127.0.0.1}"
@@ -112,7 +136,7 @@ esac
 
 # --- 1. Server reachable? --------------------------------------------------
 pg_isready --host="$PGHOST" --port="$PGPORT" --timeout=5 >/dev/null 2>&1 \
-    || fail "no PostgreSQL server at $PGHOST:$PGPORT. Start it, or run 'docker compose up postgres'."
+    || fail "no PostgreSQL server at $PGHOST:$PGPORT. Start the PostgreSQL service and try again (see the README's Setup section)."
 
 # --- 2. Database exists? ---------------------------------------------------
 # Connect to the maintenance database to ask, and to create it if it is missing,
@@ -135,10 +159,24 @@ fi
 # client_min_messages=warning suppresses the "drop cascades to table ..." notice
 # per object, which on a populated database is 25 lines of noise on stderr.
 say "  dropping schema"
-psql_db --command="SET client_min_messages = warning;
-                   DROP SCHEMA IF EXISTS public CASCADE;
-                   CREATE SCHEMA public;" >/dev/null 2>&1 \
-    || fail "could not drop and recreate schema 'public'"
+# The output is captured rather than discarded so that a failure can report the
+# server's own message. An earlier version sent both streams to /dev/null, which
+# meant a real error here surfaced as "could not drop and recreate schema" and
+# nothing else — true, and useless to whoever has to fix it.
+if ! drop_err=$(psql_db --command="SET client_min_messages = warning;
+                                   DROP SCHEMA IF EXISTS public CASCADE;
+                                   CREATE SCHEMA public;" 2>&1); then
+    echo "${RED}✗ could not drop and recreate schema 'public'${OFF}" >&2
+    echo "" >&2
+    echo "$drop_err" >&2
+    echo "" >&2
+    echo "Common causes:" >&2
+    echo "  * the connecting user is not a superuser and does not own the schema" >&2
+    echo "    → check PGADMIN_USER in .env (it should normally be 'postgres')" >&2
+    echo "  * another client (pgAdmin, a psql window, the API) is connected and" >&2
+    echo "    holding a lock → close it and run this again" >&2
+    exit 1
+fi
 
 # --- 4. Apply the build files in numeric order -----------------------------
 # Globbing db/0*.sql rather than listing files means this loop does not change
