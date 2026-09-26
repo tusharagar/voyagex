@@ -1,7 +1,14 @@
 import { defineConfig } from 'vitest/config';
+import dotenv from 'dotenv';
+
+// The suite reads database credentials from the same repository-root .env the
+// API and db/reset.sh use, so `npm test` works with no exported variables.
+// Anything already in the shell environment still takes precedence.
+const fileEnv = dotenv.config({ path: '.env' }).parsed ?? {};
 
 export default defineConfig({
   test: {
+    env: fileEnv,
     include: ['tests/**/*.test.js'],
     globalSetup: ['tests/globalSetup.js'],
     setupFiles: ['tests/setup.js'],

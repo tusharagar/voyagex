@@ -9,7 +9,7 @@
  * Bound to 127.0.0.1 and never deployed (SRS constraint C-06).
  */
 
-import 'dotenv/config';
+import './loadEnv.js';   // must be the first import — see the file for why
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
