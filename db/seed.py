@@ -271,7 +271,7 @@ def main() -> int:
             "VALUES (%s,%s,%s,%s,%s) RETURNING destination_id",
             (name, state, cat, f"{name} in {state} — {cat.lower()} destination.",
              rng.choice(SEASONS)))
-        destinations.append((cur.fetchone()[0], cat))
+        destinations.append((cur.fetchone()[0], cat, name))
 
     hotels = []
     for i in range(TARGETS["hotel"]):
@@ -321,14 +321,14 @@ def main() -> int:
         cur.execute(
             "INSERT INTO package (title, description, duration_days, duration_nights, "
             "category, max_group_size) VALUES (%s,%s,%s,%s,%s,%s) RETURNING package_id",
-            (f"{picked[0][0]} {rng.choice(['Explorer','Discovery','Trail','Escape','Circuit'])}",
+            (f"{picked[0][2]} {rng.choice(['Explorer','Discovery','Trail','Escape','Circuit'])}",
              fake.paragraph(nb_sentences=3), days, days - 1, cat, rng.choice([12, 16, 18, 24, 30])))
         pid = cur.fetchone()[0]
         packages.append({"id": pid, "days": days, "category": cat,
                          "destinations": [d[0] for d in picked]})
 
         day = 1
-        for dest_id, _c in picked:
+        for dest_id, _cat, _name in picked:
             nights = max(1, days // len(picked))
             cur.execute(
                 "INSERT INTO package_destination (package_id, destination_id, day_number, nights_stay) "
