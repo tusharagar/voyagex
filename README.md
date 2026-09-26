@@ -35,7 +35,7 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phases 1–7 of 13 complete · the end-to-end feature works
+## Current status — Phases 1–8 of 13 complete · 95 tests passing
 
 > **2026-09-26.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
@@ -51,7 +51,7 @@ Three things make it more than a booking form:
 | P5 | Roles and grants | ✅ Complete — 5 roles, agent DELETE refused by PostgreSQL |
 | P6 | Backend: pools, tracing, auth, routes | ✅ Complete — 9 endpoints, all traced |
 | P7 | Frontend end-to-end feature | ✅ Complete — 7 screens, QueryTrace on each |
-| P8 | Test suite and generated test-case table | ⬜ Pending |
+| P8 | Test suite and generated test-case table | ✅ Complete — 95 tests, table generated |
 | P9 | UML, README, Compose, report, video | ⬜ Pending |
 | P10–P13 | Showcase queries, remaining screens, ML, DBMS report | ⬜ After mid-semester |
 
@@ -167,15 +167,21 @@ credentials for anything and exist only so a grader can sign in.
 
 ---
 
-## Tests *(pending — Phase 8)*
+## Tests
 
 ```bash
-cd server
-npm test                  # vitest + supertest against a disposable travel_test database
-npm run test:coverage     # coverage summary
-
-cd ../ml && pytest        # feature-extraction tests
+npm install               # once, at the repository root
+npm test                  # 95 tests: vitest + supertest against a disposable travel_test DB
+npm run test:coverage     # with a coverage summary
+npm run test:report       # runs the suite AND regenerates docs/test_cases.md from it
 ```
+
+The suite builds its own database with `./db/reset.sh --test`, then truncates and reloads
+`tests/fixtures/sample_data.sql` before **each** test, so no test can pass only because another
+ran first.
+
+[`docs/test_cases.md`](docs/test_cases.md) is **generated from the run**, never written by hand —
+the expected/actual/status columns cannot drift from what actually happened.
 
 The test-case table in `docs/test_cases.md` is **generated from a real run**, not written by
 hand:

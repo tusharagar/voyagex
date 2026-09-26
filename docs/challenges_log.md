@@ -128,6 +128,42 @@ per-bucket rates looked convincing while the model saw almost nothing.
 
 ---
 
+## C-06 · Six tests failed on their own assumptions, not on a defect in the code
+
+**When:** 2026-09-26 · **Status:** Resolved
+
+**Challenge.** The first complete run of the Phase 8 suite gave 89 passing and 6 failing. The
+temptation with a red suite is to reach for the production code.
+
+**Diagnosis.** None of the six was a bug in the system. Five shared one root cause: `setup.js`
+truncates every table and reloads the fixture before **each** test, but those API tests had been
+written assuming the account registered in an earlier test still existed. The isolation was
+correct; the tests were written against the wrong model of it. The symptoms were misleading —
+a duplicate-email check returning 201, a valid login returning 401, `/api/auth/me` returning
+404 — each of which reads like a real authentication defect.
+
+The sixth was a genuine JavaScript subtlety. The test asserted that three hostile filter keys
+were ignored, and only two were. In an object literal, `{'__proto__': 'z'}` sets the
+prototype rather than creating an own property, so `Object.entries` never sees it and the key
+was never in the input at all. Notably the equivalent HTTP test passed, because Express's query
+parser does create it as an own property — so the same assertion was meaningful over HTTP and
+meaningless in the unit test.
+
+**Attempted and rejected.** Relaxing the per-test reset to per-file, which would have turned all
+five green immediately. Rejected: order-dependent tests pass as a suite and fail when one is run
+alone, and the isolation is what makes the table trustworthy.
+
+**Solution.** Each API test now creates the account it needs, so no test depends on another
+having run. The unit test builds its input with `JSON.parse`, which creates a real own
+`__proto__` property and also matches how a request body actually arrives. Result: 95 passing.
+
+**Worth keeping.** A failing test is a claim about the system, and the claim needs verifying
+like any other. Five of these looked exactly like authentication bugs and were not. Reading the
+failure before reaching for the code is what separated "the tests are wrong" from "the login is
+broken".
+
+---
+
 ## Template for new entries
 
 ```
