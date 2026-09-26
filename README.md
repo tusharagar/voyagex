@@ -35,7 +35,7 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phases 1–5 of 13 complete · the database layer is done
+## Current status — Phases 1–6 of 13 complete · database and API working end to end
 
 > **2026-09-26.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
@@ -49,7 +49,7 @@ Three things make it more than a booking form:
 | P3 | Seed data | ✅ Complete — 1200 bookings, deterministic |
 | P4 | Triggers and stored procedures | ✅ Complete — 3 triggers, 2 procedures, concurrency verified |
 | P5 | Roles and grants | ✅ Complete — 5 roles, agent DELETE refused by PostgreSQL |
-| P6 | Backend: pools, tracing, auth, routes | ⬜ Pending |
+| P6 | Backend: pools, tracing, auth, routes | ✅ Complete — 9 endpoints, all traced |
 | P7 | Frontend end-to-end feature | ⬜ Pending |
 | P8 | Test suite and generated test-case table | ⬜ Pending |
 | P9 | UML, README, Compose, report, video | ⬜ Pending |
@@ -138,7 +138,8 @@ Then open <http://127.0.0.1:5173>.
 ./db/reset.sh --seed             # rebuild, then seed (Phase 3)
 
 # API
-cd server && npm install && npm run dev        # → http://127.0.0.1:4000
+cd server && npm install && cp ../.env .env && npm run dev   # → http://127.0.0.1:4000
+curl http://127.0.0.1:4000/api/health
 
 # Client
 cd client && npm install && npm run dev        # → http://127.0.0.1:5173

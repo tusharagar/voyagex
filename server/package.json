@@ -1,0 +1,34 @@
+{
+  "name": "voyagex-api",
+  "version": "0.6.0",
+  "private": true,
+  "description": "VoyageX API — Express over PostgreSQL, no ORM (ADR-01)",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.8",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  }
+}
