@@ -95,6 +95,21 @@ say "  user     $PGUSER"
 say "  database $TARGET_DB$([[ "$USE_TEST_DB" == true ]] && echo '  (test)')${OFF}"
 say ""
 
+# --- 0. Refuse to touch a maintenance or template database -----------------
+# This script drops the public schema of whatever TARGET_DB resolves to. A typo
+# in .env (PGDATABASE=postgres) would therefore destroy the cluster's
+# maintenance database rather than this project's, and the connection would
+# succeed, so nothing else here would stop it. Checked before the server is even
+# contacted.
+case "$TARGET_DB" in
+    postgres|template0|template1)
+        fail "refusing to reset '$TARGET_DB' — that is a PostgreSQL maintenance/template database, not the project database. Check $([[ "$USE_TEST_DB" == true ]] && echo PGDATABASE_TEST || echo PGDATABASE) in .env."
+        ;;
+    '')
+        fail "no target database resolved. Set PGDATABASE in .env."
+        ;;
+esac
+
 # --- 1. Server reachable? --------------------------------------------------
 pg_isready --host="$PGHOST" --port="$PGPORT" --timeout=5 >/dev/null 2>&1 \
     || fail "no PostgreSQL server at $PGHOST:$PGPORT. Start it, or run 'docker compose up postgres'."
@@ -136,18 +151,27 @@ shopt -u nullglob
 
 for sql_file in "${BUILD_FILES[@]}"; do
     name="$(basename "$sql_file")"
-    printf '  %-26s' "$name"
+    # --quiet means failures and the final summary only, so the per-file
+    # progress line is suppressed here and the name is printed by the failure
+    # branch instead.
+    [[ "$QUIET" == true ]] || printf '  %-26s' "$name"
 
     if output=$(psql_db --file="$sql_file" 2>&1); then
-        # NOTICEs are informational (for example "extension already exists").
-        notices=$(grep -c '^NOTICE' <<<"$output" || true)
-        if [[ "$notices" -gt 0 ]]; then
-            echo "${GREEN}ok${OFF} ${DIM}($notices notice$([[ $notices -ne 1 ]] && echo s))${OFF}"
-        else
-            echo "${GREEN}ok${OFF}"
+        if [[ "$QUIET" != true ]]; then
+            # NOTICEs are informational (for example "extension already exists").
+            notices=$(grep -c '^NOTICE' <<<"$output" || true)
+            if [[ "$notices" -gt 0 ]]; then
+                echo "${GREEN}ok${OFF} ${DIM}($notices notice$([[ $notices -ne 1 ]] && echo s))${OFF}"
+            else
+                echo "${GREEN}ok${OFF}"
+            fi
         fi
     else
-        echo "${RED}FAILED${OFF}"
+        if [[ "$QUIET" == true ]]; then
+            echo "${RED}✗ $name FAILED${OFF}" >&2
+        else
+            echo "${RED}FAILED${OFF}"
+        fi
         echo "" >&2
         echo "$output" >&2
         fail "build stopped at $name"
