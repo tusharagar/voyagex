@@ -48,6 +48,21 @@
 -- ---------------------------------------------------------------------------
 -- =============================================================================
 
+-- SECURITY DEFINER, deliberately, and with search_path pinned.
+--
+-- app_customer holds no INSERT on booking, payment or booking_traveller
+-- (07_roles_grants.sql). Without SECURITY DEFINER a customer calling this
+-- function would be refused by those very grants, and the only way to make
+-- booking work would be to grant direct INSERT on booking — which is exactly
+-- the access this design exists to withhold. "Booking only through the
+-- procedure" is not a convention here; it is what the grants enforce.
+--
+-- SET search_path is not optional on a SECURITY DEFINER function. Without it a
+-- caller can create a schema of their own, put a malicious `booking` table or
+-- operator in it, prepend it to search_path, and have this function execute
+-- against that object with the owner's privileges. Pinning search_path to
+-- public and pg_temp closes that. pg_temp is listed last so a temporary object
+-- cannot shadow a real one.
 CREATE OR REPLACE FUNCTION book_package(
     p_customer_id             INT,
     p_departure_id            INT,
@@ -56,6 +71,8 @@ CREATE OR REPLACE FUNCTION book_package(
 )
 RETURNS INT
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     v_seats_needed   INT;
@@ -194,6 +211,8 @@ COMMENT ON FUNCTION book_package(INT, INT, INT[], INT) IS
 -- Test TC-U-02 asserts the boundaries at 30, 15 and 7, not the middles.
 -- =============================================================================
 
+-- SECURITY DEFINER for the same reason as book_package: a customer may cancel
+-- their booking without holding UPDATE on booking or INSERT on cancellation.
 CREATE OR REPLACE FUNCTION cancel_booking(
     p_booking_id   INT,
     p_reason       TEXT,
@@ -201,6 +220,8 @@ CREATE OR REPLACE FUNCTION cancel_booking(
 )
 RETURNS VOID
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     v_status        VARCHAR(12);

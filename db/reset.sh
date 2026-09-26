@@ -178,6 +178,47 @@ for sql_file in "${BUILD_FILES[@]}"; do
     fi
 done
 
+# --- 4b. Set role passwords from the environment ---------------------------
+# 07_roles_grants.sql creates the five roles without passwords, so that nothing
+# secret is ever committed (SRS C-07). The passwords live in .env and are
+# applied here, and only for roles whose variable is actually set — on a local
+# cluster using peer or trust authentication none of this is needed.
+#
+# Note for anyone hardening this later: ALTER ROLE ... PASSWORD appears in the
+# server log when log_statement is on. That is acceptable for a localhost
+# development database and would not be for a real one.
+if psql_db --tuples-only --no-align \
+       --command="SELECT 1 FROM pg_roles WHERE rolname='app_customer'" 2>/dev/null | grep -q 1; then
+    pw_set=0
+    for pair in "app_customer:PG_CUSTOMER_PASSWORD" \
+                "app_agent:PG_AGENT_PASSWORD" \
+                "app_manager:PG_MANAGER_PASSWORD" \
+                "app_dbadmin:PG_DBADMIN_PASSWORD" \
+                "sql_console_ro:PG_CONSOLE_RO_PASSWORD"; do
+        role="${pair%%:*}"
+        var="${pair##*:}"
+        pw="${!var:-}"
+        # The placeholder in .env.example is not a password.
+        [[ -z "$pw" || "$pw" == "replace_me" ]] && continue
+        # Fed on stdin rather than with --command: psql interpolates :'pw' only
+        # in input read from a file or standard input, never in a -c string,
+        # where it is sent to the server literally and fails to parse. Quoting
+        # the password into the SQL by hand instead would be an injection route.
+        if ! err=$(printf "ALTER ROLE %s PASSWORD :'pw';\n" "$role" \
+                   | psql_db --set=pw="$pw" --file=- 2>&1); then
+            echo "${RED}✗ could not set password for $role${OFF}" >&2
+            echo "$err" >&2
+            exit 1
+        fi
+        pw_set=$((pw_set + 1))
+    done
+    if [[ "$pw_set" -gt 0 ]]; then
+        say "  set passwords for $pw_set role(s) from the environment"
+    else
+        say "  ${DIM}no role passwords in the environment — relying on peer/trust auth${OFF}"
+    fi
+fi
+
 # --- 5. Verify the exit condition ------------------------------------------
 # Phase 2 is accepted when reset.sh builds all 25 tables from empty with zero
 # errors (docs/project_plan.md). Counting them here means the script asserts its

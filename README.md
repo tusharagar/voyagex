@@ -35,7 +35,7 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phases 1–4 of 13 complete
+## Current status — Phases 1–5 of 13 complete · the database layer is done
 
 > **2026-09-26.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
@@ -48,7 +48,7 @@ Three things make it more than a booking form:
 | P2 | Schema, constraints, `reset.sh` | ✅ Complete — 25 tables, 108 constraints |
 | P3 | Seed data | ✅ Complete — 1200 bookings, deterministic |
 | P4 | Triggers and stored procedures | ✅ Complete — 3 triggers, 2 procedures, concurrency verified |
-| P5 | Roles and grants | ⬜ Pending |
+| P5 | Roles and grants | ✅ Complete — 5 roles, agent DELETE refused by PostgreSQL |
 | P6 | Backend: pools, tracing, auth, routes | ⬜ Pending |
 | P7 | Frontend end-to-end feature | ⬜ Pending |
 | P8 | Test suite and generated test-case table | ⬜ Pending |
