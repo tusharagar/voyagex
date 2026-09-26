@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .frame { fill:#fff; stroke:#333; stroke-width:2 }
+    .box   { fill:#f2f2f2; stroke:#777; stroke-width:1.5 }
+    .field { fill:#fff; stroke:#777; stroke-width:1.5 }
+    .btn   { fill:#ddd; stroke:#333; stroke-width:1.5 }
+    .ph    { fill:#bbb }
+    .t     { font-size:14px; fill:#222 }
+    .tsm   { font-size:12px; fill:#555 }
+    .ttl   { font-size:20px; fill:#111; font-weight:bold }
+    .lbl   { font-size:12px; fill:#333 }
+    .note  { font-size:11px; fill:#a33; font-style:italic }
+    .dash  { fill:none; stroke:#a33; stroke-width:1; stroke-dasharray:4 3 }
+  </style>
+
+  <rect x="0" y="0" width="960" height="640" fill="#fafafa"/>
+  <text x="24" y="28" class="ttl">Wireframe 01 — Login / Register</text>
+  <text x="24" y="48" class="tsm">VoyageX · screen 1 of 5 · low fidelity · FR-01, FR-02 · UC-01, UC-02 · v1.0 2026-09-26</text>
+
+  <!-- browser frame -->
+  <rect x="24" y="64" width="912" height="552" class="frame"/>
+  <rect x="24" y="64" width="912" height="36" class="box"/>
+  <circle cx="44" cy="82" r="5" fill="#ccc"/><circle cx="60" cy="82" r="5" fill="#ccc"/><circle cx="76" cy="82" r="5" fill="#ccc"/>
+  <rect x="96" y="72" width="300" height="20" class="field"/>
+  <text x="104" y="86" class="tsm">localhost:5173/login</text>
+
+  <!-- app header -->
+  <rect x="24" y="100" width="912" height="48" class="box"/>
+  <text x="48" y="130" class="ttl">VoyageX</text>
+  <text x="170" y="129" class="t">Packages</text>
+  <rect x="800" y="112" width="110" height="26" class="btn"/>
+  <text x="826" y="130" class="t">Sign in</text>
+
+  <!-- card -->
+  <rect x="330" y="200" width="300" height="330" class="frame"/>
+  <text x="354" y="234" class="ttl">Sign in</text>
+
+  <text x="354" y="268" class="lbl">Email</text>
+  <rect x="354" y="276" width="252" height="32" class="field"/>
+  <rect x="364" y="288" width="120" height="8" class="ph"/>
+
+  <text x="354" y="330" class="lbl">Password</text>
+  <rect x="354" y="338" width="252" height="32" class="field"/>
+  <rect x="364" y="350" width="80" height="8" class="ph"/>
+
+  <rect x="354" y="392" width="252" height="38" class="btn"/>
+  <text x="452" y="416" class="t">Sign in</text>
+
+  <line x1="354" y1="452" x2="606" y2="452" stroke="#ddd"/>
+  <text x="354" y="476" class="tsm">No account yet?</text>
+  <text x="466" y="476" class="t" text-decoration="underline">Create one</text>
+
+  <rect x="354" y="492" width="252" height="24" fill="#fbeaea" stroke="#d99"/>
+  <text x="362" y="508" class="tsm">⚠ Invalid email or password  (error state)</text>
+
+  <!-- annotations -->
+  <path class="dash" d="M630 300 L720 300"/>
+  <text x="726" y="288" class="note">Register form reuses this card:</text>
+  <text x="726" y="304" class="note">+ first name, last name, phone.</text>
+  <text x="726" y="320" class="note">Creates user_account + customer</text>
+  <text x="726" y="336" class="note">in one transaction (FR-01).</text>
+
+  <path class="dash" d="M630 411 L720 411"/>
+  <text x="726" y="400" class="note">On success: JWT carries userId,</text>
+  <text x="726" y="416" class="note">role and dbRole. Redirect by role —</text>
+  <text x="726" y="432" class="note">customer → catalogue, agent →</text>
+  <text x="726" y="448" class="note">dashboard, manager → reports.</text>
+
+  <path class="dash" d="M330 504 L250 504"/>
+  <text x="60" y="494" class="note">401 shows a generic message:</text>
+  <text x="60" y="510" class="note">never reveal whether the email</text>
+  <text x="60" y="526" class="note">exists (FR-02, TC-A-04).</text>
+
+  <text x="48" y="588" class="tsm">No QueryTrace panel on this screen — authentication returns a token, not a result set.</text>
+</svg>

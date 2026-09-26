@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="800" viewBox="0 0 960 800" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .frame { fill:#fff; stroke:#333; stroke-width:2 }
+    .box   { fill:#f2f2f2; stroke:#777; stroke-width:1.5 }
+    .field { fill:#fff; stroke:#777; stroke-width:1.5 }
+    .btn   { fill:#ddd; stroke:#333; stroke-width:1.5 }
+    .btnp  { fill:#bcd0e5; stroke:#333; stroke-width:1.5 }
+    .ph    { fill:#bbb }
+    .img   { fill:#e4e4e4; stroke:#aaa }
+    .t     { font-size:14px; fill:#222 }
+    .tsm   { font-size:12px; fill:#555 }
+    .ttl   { font-size:20px; fill:#111; font-weight:bold }
+    .note  { font-size:11px; fill:#a33; font-style:italic }
+    .dash  { fill:none; stroke:#a33; stroke-width:1; stroke-dasharray:4 3 }
+    .trace { fill:#eef2f7; stroke:#5a7ea8; stroke-width:1.5 }
+    .tab   { fill:#fff; stroke:#777 }
+    .taba  { fill:#ddd; stroke:#333 }
+  </style>
+
+  <rect x="0" y="0" width="960" height="800" fill="#fafafa"/>
+  <text x="24" y="28" class="ttl">Wireframe 03 — Package Detail</text>
+  <text x="24" y="48" class="tsm">VoyageX · screen 3 of 5 · low fidelity · FR-07, FR-08, FR-24 · UC-06 · v1.0 2026-09-26</text>
+
+  <rect x="24" y="64" width="912" height="712" class="frame"/>
+  <rect x="24" y="64" width="912" height="36" class="box"/>
+  <rect x="96" y="72" width="320" height="20" class="field"/>
+  <text x="104" y="86" class="tsm">localhost:5173/packages/17</text>
+
+  <rect x="24" y="100" width="912" height="48" class="box"/>
+  <text x="48" y="130" class="ttl">VoyageX</text>
+  <text x="170" y="129" class="t">Packages</text>
+  <text x="256" y="129" class="t">My bookings</text>
+  <text x="790" y="129" class="tsm">signed in as customer</text>
+
+  <!-- breadcrumb + hero -->
+  <text x="48" y="174" class="tsm">Packages  ›  Hill  ›  <tspan fill="#222">Manali &amp; Kasol Explorer</tspan></text>
+
+  <rect x="48" y="188" width="380" height="180" class="img"/>
+  <text x="60" y="284" class="tsm">hero image</text>
+
+  <rect x="448" y="188" width="464" height="180" class="frame"/>
+  <rect x="464" y="204" width="300" height="16" class="ph"/>
+  <text x="464" y="248" class="tsm">Hill · 6 days / 5 nights · max group size 18</text>
+  <rect x="464" y="262" width="420" height="8" class="ph"/>
+  <rect x="464" y="278" width="380" height="8" class="ph"/>
+  <rect x="464" y="294" width="400" height="8" class="ph"/>
+  <text x="464" y="334" class="t" font-weight="bold">Destinations</text>
+  <rect x="464" y="342" width="90" height="20" class="box"/><text x="472" y="357" class="tsm">Manali</text>
+  <rect x="562" y="342" width="90" height="20" class="box"/><text x="570" y="357" class="tsm">Kasol</text>
+  <rect x="660" y="342" width="110" height="20" class="box"/><text x="668" y="357" class="tsm">Solang Valley</text>
+
+  <!-- tabs -->
+  <rect x="48" y="392" width="120" height="30" class="taba"/><text x="72" y="412" class="t">Itinerary</text>
+  <rect x="168" y="392" width="120" height="30" class="tab"/><text x="196" y="412" class="t">Hotels</text>
+  <rect x="288" y="392" width="120" height="30" class="tab"/><text x="312" y="412" class="t">Reviews</text>
+  <line x1="48" y1="422" x2="912" y2="422" stroke="#777"/>
+
+  <!-- itinerary -->
+  <g>
+    <text x="48" y="450" class="t" font-weight="bold">Day 1 — Arrive Manali</text>
+    <text x="64" y="472" class="tsm">Morning   ·  Pickup and transfer to hotel</text>
+    <text x="64" y="492" class="tsm">Evening   ·  Mall Road walk</text>
+    <text x="48" y="522" class="t" font-weight="bold">Day 2 — Solang Valley</text>
+    <text x="64" y="544" class="tsm">Morning   ·  Solang Valley excursion</text>
+    <text x="64" y="564" class="tsm">Afternoon ·  Adventure activities (optional)</text>
+    <text x="48" y="594" class="tsm" text-decoration="underline">Show days 3 – 6</text>
+  </g>
+
+  <!-- departures panel -->
+  <rect x="520" y="440" width="392" height="230" class="frame"/>
+  <text x="536" y="466" class="t" font-weight="bold">Choose a departure</text>
+
+  <rect x="536" y="480" width="360" height="42" class="field"/>
+  <text x="548" y="498" class="t">12 Oct – 17 Oct 2026</text>
+  <text x="548" y="514" class="tsm">₹24,500 per seat</text>
+  <rect x="790" y="488" width="94" height="26" class="btnp"/>
+  <text x="806" y="506" class="tsm">8 seats left</text>
+
+  <rect x="536" y="532" width="360" height="42" class="field"/>
+  <text x="548" y="550" class="t">26 Oct – 31 Oct 2026</text>
+  <text x="548" y="566" class="tsm">₹26,000 per seat</text>
+  <rect x="790" y="540" width="94" height="26" fill="#fdeeee" stroke="#d99"/>
+  <text x="806" y="558" class="tsm">2 seats left</text>
+
+  <rect x="536" y="584" width="360" height="42" fill="#f6f6f6" stroke="#bbb"/>
+  <text x="548" y="602" class="tsm">9 Nov – 14 Nov 2026</text>
+  <text x="548" y="618" class="tsm">₹26,000 per seat</text>
+  <rect x="790" y="592" width="94" height="26" fill="#f0f0f0" stroke="#bbb"/>
+  <text x="812" y="610" class="tsm">FULL</text>
+
+  <rect x="536" y="636" width="360" height="20" fill="none"/>
+  <text x="536" y="652" class="tsm">Price and seats belong to the departure, not the package.</text>
+
+  <!-- QueryTrace -->
+  <rect x="48" y="686" width="864" height="28" class="trace"/>
+  <text x="60" y="705" class="tsm">▸  1 row · 12 ms · Show SQL   (package + itinerary + destinations, 4-table join)</text>
+  <rect x="48" y="722" width="864" height="28" class="trace"/>
+  <text x="60" y="741" class="tsm">▸  3 rows · 6 ms · Show SQL   (departures with live availability)</text>
+
+  <!-- annotations -->
+  <path class="dash" d="M912 500 L928 500"/>
+  <text x="620" y="770" class="note">Seats shown are the live value of departure.available_seats (ADR-05).</text>
+  <path class="dash" d="M520 610 L440 610"/>
+  <text x="120" y="626" class="note">A full departure is not selectable —</text>
+  <text x="120" y="642" class="note">but the seat check still happens in</text>
+  <text x="120" y="658" class="note">the database, never in the UI (FR-12).</text>
+</svg>

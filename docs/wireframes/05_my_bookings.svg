@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="800" viewBox="0 0 960 800" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .frame { fill:#fff; stroke:#333; stroke-width:2 }
+    .box   { fill:#f2f2f2; stroke:#777; stroke-width:1.5 }
+    .field { fill:#fff; stroke:#777; stroke-width:1.5 }
+    .btn   { fill:#ddd; stroke:#333; stroke-width:1.5 }
+    .btnd  { fill:#f3dcdc; stroke:#a55; stroke-width:1.5 }
+    .ph    { fill:#bbb }
+    .t     { font-size:14px; fill:#222 }
+    .tsm   { font-size:12px; fill:#555 }
+    .ttl   { font-size:20px; fill:#111; font-weight:bold }
+    .note  { font-size:11px; fill:#a33; font-style:italic }
+    .dash  { fill:none; stroke:#a33; stroke-width:1; stroke-dasharray:4 3 }
+    .trace { fill:#eef2f7; stroke:#5a7ea8; stroke-width:1.5 }
+    .badge { stroke-width:1 }
+  </style>
+
+  <rect x="0" y="0" width="960" height="800" fill="#fafafa"/>
+  <text x="24" y="28" class="ttl">Wireframe 05 — My Bookings (list, detail, cancel)</text>
+  <text x="24" y="48" class="tsm">VoyageX · screen 5 of 5 · low fidelity · FR-14, FR-18, FR-24 · UC-08, UC-10 · v1.0 2026-09-26</text>
+
+  <rect x="24" y="64" width="912" height="560" class="frame"/>
+  <rect x="24" y="64" width="912" height="36" class="box"/>
+  <rect x="96" y="72" width="320" height="20" class="field"/>
+  <text x="104" y="86" class="tsm">localhost:5173/bookings</text>
+
+  <rect x="24" y="100" width="912" height="48" class="box"/>
+  <text x="48" y="130" class="ttl">VoyageX</text>
+  <text x="170" y="129" class="t">Packages</text>
+  <text x="256" y="129" class="t" font-weight="bold">My bookings</text>
+  <text x="790" y="129" class="tsm">signed in as customer</text>
+
+  <text x="48" y="182" class="ttl">My bookings</text>
+  <rect x="700" y="164" width="100" height="26" class="field"/><text x="712" y="182" class="tsm">All ▾</text>
+  <rect x="812" y="164" width="100" height="26" class="field"/><text x="824" y="182" class="tsm">2026 ▾</text>
+
+  <!-- booking row 1: expanded -->
+  <rect x="48" y="200" width="864" height="270" class="frame"/>
+  <text x="64" y="228" class="t" font-weight="bold">#10428 · Manali &amp; Kasol Explorer</text>
+  <rect x="380" y="214" width="90" height="20" class="badge" fill="#e8f3e8" stroke="#8a8"/>
+  <text x="392" y="229" class="tsm">CONFIRMED</text>
+  <text x="64" y="252" class="tsm">12 Oct – 17 Oct 2026 · 2 travellers · booked 26 Sep 2026 (online)</text>
+  <text x="836" y="228" class="tsm" text-decoration="underline">Collapse</text>
+
+  <line x1="64" y1="266" x2="896" y2="266" stroke="#eee"/>
+
+  <!-- travellers -->
+  <text x="64" y="292" class="t" font-weight="bold">Travellers</text>
+  <text x="64" y="314" class="tsm">Rohan Mehta · seat 12A</text>
+  <text x="64" y="334" class="tsm">Anjali Mehta · seat 12B</text>
+
+  <!-- money -->
+  <text x="380" y="292" class="t" font-weight="bold">Payments</text>
+  <text x="380" y="314" class="tsm">26 Sep · ₹20,000 · UPI · SUCCESS</text>
+  <text x="380" y="334" class="tsm">26 Sep · ₹29,000 · —  · PENDING</text>
+
+  <rect x="700" y="278" width="196" height="96" class="box"/>
+  <text x="714" y="300" class="tsm">Total</text><text x="836" y="300" class="t">₹49,000</text>
+  <text x="714" y="322" class="tsm">Paid</text><text x="836" y="322" class="t">₹20,000</text>
+  <line x1="714" y1="332" x2="882" y2="332" stroke="#ccc"/>
+  <text x="714" y="354" class="t" font-weight="bold">Balance due</text><text x="818" y="354" class="t" font-weight="bold">₹29,000</text>
+
+  <!-- actions -->
+  <rect x="64" y="396" width="150" height="32" class="btn"/><text x="86" y="417" class="tsm">Pay balance</text>
+  <rect x="226" y="396" width="150" height="32" class="btn"/><text x="252" y="417" class="tsm">Download voucher</text>
+  <rect x="746" y="396" width="150" height="32" class="btnd"/><text x="782" y="417" class="tsm">Cancel booking</text>
+
+  <rect x="64" y="440" width="832" height="18" fill="none"/>
+  <text x="64" y="453" class="tsm">Balance due is computed in v_booking_summary — it is never stored on the booking row.</text>
+
+  <!-- booking row 2: collapsed, cancelled -->
+  <rect x="48" y="484" width="864" height="60" class="frame"/>
+  <text x="64" y="510" class="t">#10307 · Jaipur Heritage Walk</text>
+  <rect x="380" y="496" width="90" height="20" class="badge" fill="#f3e8e8" stroke="#c99"/>
+  <text x="394" y="511" class="tsm">CANCELLED</text>
+  <text x="64" y="532" class="tsm">4 Sep 2026 · refund ₹6,750 of ₹13,500 (50% tier, 22 days before departure)</text>
+  <text x="836" y="518" class="tsm" text-decoration="underline">Expand</text>
+
+  <!-- trace -->
+  <rect x="48" y="562" width="864" height="28" class="trace"/>
+  <text x="60" y="581" class="tsm">▸  2 rows · 9 ms · Show SQL   (v_booking_summary filtered by customer)</text>
+
+  <!-- cancel dialog -->
+  <text x="24" y="656" class="ttl">Cancel confirmation dialog</text>
+  <rect x="24" y="672" width="470" height="112" class="frame"/>
+  <text x="44" y="698" class="t" font-weight="bold">Cancel booking #10428?</text>
+  <text x="44" y="720" class="tsm">16 days before departure → 50% refund tier.</text>
+  <text x="44" y="740" class="tsm">Refund ₹24,500 · penalty ₹24,500 · seats returned to the departure.</text>
+  <rect x="44" y="748" width="200" height="26" class="field"/><text x="52" y="766" class="tsm">Reason (required)</text>
+  <rect x="266" y="748" width="100" height="26" class="btn"/><text x="292" y="766" class="tsm">Keep it</text>
+  <rect x="378" y="748" width="100" height="26" class="btnd"/><text x="398" y="766" class="tsm">Cancel it</text>
+
+  <!-- annotations -->
+  <path class="dash" d="M494 720 L540 720"/>
+  <text x="548" y="700" class="note">The refund shown here is the same tier the procedure</text>
+  <text x="548" y="716" class="note">applies: &gt;30 days 100%, 15–30 50%, 7–14 25%, &lt;7 0%.</text>
+  <text x="548" y="732" class="note">cancel_booking() writes the cancellation row, updates</text>
+  <text x="548" y="748" class="note">status, and the triggers restore seats and write the</text>
+  <text x="548" y="764" class="note">audit row. A second attempt fails on the UNIQUE</text>
+  <text x="548" y="780" class="note">constraint, not on a UI check (FR-19, TC-B-05).</text>
+
+  <path class="dash" d="M912 412 L928 412"/>
+</svg>
