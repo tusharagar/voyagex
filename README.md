@@ -35,17 +35,17 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phase 1 of 13 complete
+## Current status — Phases 1–2 of 13 complete
 
-> **2026-09-26.** Requirements and design are baselined. **No implementation code exists yet.**
-> Setup instructions below are written against the target structure and are marked *(pending)*
-> where the code has not landed. This section is updated as each phase completes; see
-> [`docs/project_plan.md`](docs/project_plan.md) for the schedule and actuals.
+> **2026-09-26.** Requirements and design are baselined, and the database schema builds.
+> Setup steps below are marked *(pending)* where the code has not landed yet. This section is
+> updated as each phase completes; see [`docs/project_plan.md`](docs/project_plan.md) for the
+> schedule and actuals.
 
 | Phase | Deliverable | Status |
 |---|---|---|
 | P1 | Requirements and design: SRS, use cases, architecture + ADRs, wireframes, plan | ✅ Complete |
-| P2 | Schema, constraints, `reset.sh` | ⬜ Pending |
+| P2 | Schema, constraints, `reset.sh` | ✅ Complete — 25 tables, 108 constraints |
 | P3 | Seed data | ⬜ Pending |
 | P4 | Triggers and stored procedures | ⬜ Pending |
 | P5 | Roles and grants | ⬜ Pending |
@@ -126,13 +126,16 @@ cd client && npm install && npm run dev
 
 Then open <http://127.0.0.1:5173>.
 
-### 3. Run locally without Docker *(pending — Phases 2–7)*
+### 3. Run locally without Docker *(database works; API and client pending — Phases 6–7)*
 
 ```bash
-# Database: create it, then build the schema from empty
-createdb travel_tourism
-./db/reset.sh                    # 25 tables, constraints, views, indexes,
-                                 # triggers, procedures, roles, then seeds
+# Database: build the schema from empty. reset.sh creates the database if it
+# does not exist, so this is the only command needed.
+./db/reset.sh                    # 25 tables + constraints today; picks up
+                                 # views, indexes, triggers, procedures and
+                                 # roles automatically as those files land
+./db/reset.sh --test             # same, against the test database
+./db/reset.sh --seed             # rebuild, then seed (Phase 3)
 
 # API
 cd server && npm install && npm run dev        # → http://127.0.0.1:4000
