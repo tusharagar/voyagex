@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+  }
+  /* A visible focus ring everywhere: the booking flow must be completable from
+     the keyboard, and Tailwind's reset removes the default outline. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ocean-500 ring-offset-2 ring-offset-white rounded;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
+           text-sm font-semibold transition-colors disabled:opacity-50
+           disabled:cursor-not-allowed;
+  }
+  .btn-primary { @apply btn bg-ocean-600 text-white hover:bg-ocean-700; }
+  .btn-ghost   { @apply btn bg-white text-ink-700 ring-1 ring-ink-200 hover:bg-ink-50; }
+  .btn-danger  { @apply btn bg-white text-red-700 ring-1 ring-red-200 hover:bg-red-50; }
+
+  .field {
+    @apply w-full rounded-lg border-0 bg-white px-3 py-2.5 text-sm text-ink-900
+           ring-1 ring-inset ring-ink-200 placeholder:text-ink-400
+           focus:ring-2 focus:ring-inset focus:ring-ocean-500;
+  }
+  .label { @apply block text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5; }
+  .card  { @apply rounded-xl2 bg-white shadow-card ring-1 ring-ink-100; }
+  .chip  { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium; }
+}
+
+/* Category gradients stand in for photography. Each destination category gets a
+   distinct, recognisable treatment, so a catalogue of 25 packages does not read
+   as 25 identical grey boxes — without shipping a single borrowed image. */
+.ph-Hill       { background-image: linear-gradient(140deg,#1d565d,#43a4a8 55%,#a9dcdc); }
+.ph-Beach      { background-image: linear-gradient(140deg,#216c73,#43a4a8 40%,#ecbd5e); }
+.ph-Heritage   { background-image: linear-gradient(140deg,#7f3b19,#bd6817 55%,#f3d799); }
+.ph-Pilgrimage { background-image: linear-gradient(140deg,#6a3118,#d9871d 60%,#f9ecce); }
+.ph-Wildlife   { background-image: linear-gradient(140deg,#1b464c,#216c73 45%,#72c3c5); }
+.ph-Urban      { background-image: linear-gradient(140deg,#21262e,#4d596a 55%,#aeb7c2); }
+.ph-default    { background-image: linear-gradient(140deg,#1d565d,#2a878c 55%,#72c3c5); }

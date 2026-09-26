@@ -44,7 +44,7 @@ Seven days, 2026-09-26 to 2026-10-03. Owners use the member labels from
 | D3 | Sun 28 Sep | **P3** seeding to target row counts; **P4** triggers and procedures | A, D | Row counts match the brief; `book_package` decrements seats, cancel restores them | ✅ **P3 and P4 both complete** (26 Sep) — 3 triggers, 2 procedures. Concurrency proven: contending session blocked 2.05s on the row lock, then failed `INSUFFICIENT_SEATS`; 1 booking, seats 0. All 6 refund-tier boundaries correct. P3 landed after P4 as planned: 1200 bookings, 179 cancellations (14.9%), 600 reviews, seeded deterministically in ~2s. Seat consistency between the trigger and the generator verified across all 300 departures. Cancellation signal measured at ROC-AUC 0.78-0.80. |
 | D4 | Mon 29 Sep | **P5** roles and grants; **P6** pools, `runTraced`, auth routes | A, B | `psql -U app_agent -c "DELETE FROM booking"` is refused by PostgreSQL | ✅ **P5 complete, three days early** (26 Sep) — 5 roles; agent DELETE refused with SQLSTATE 42501; full privilege matrix verified across all five roles. **P6 not started.** |
 | D5 | Tue 30 Sep | **P6** catalogue, departure, booking, payment routes | B | Every data endpoint returns all seven traced keys | ✅ **P6 complete, four days early** (26 Sep) — 9 endpoints verified returning all seven keys with `$n` placeholders intact; full register→search→book→view path exercised against the seeded database. |
-| D6 | Wed 1 Oct | **P7** login, catalogue, package detail, booking flow, my bookings, `<QueryTrace>` | C | A user can register, search, book and see the booking, with SQL visible at each step | ⬜ Not started |
+| D6 | Wed 1 Oct | **P7** login, catalogue, package detail, booking flow, my bookings, `<QueryTrace>` | C | A user can register, search, book and see the booking, with SQL visible at each step | ✅ **P7 complete, five days early** (26 Sep) — 7 screens; the full path driven in headless Chromium with no console errors and 9 screenshots captured as evidence. **This is the end-to-end feature the evaluation requires.** |
 | D7 | Thu 2 Oct | **P8** test suite incl. concurrency test; generate `test_cases.md`; **P9** UML, README, Compose | D | 25+ tests pass; the table is generated from a real run | ⬜ Not started |
 | — | Fri 3 Oct | **P9** report assembly, screenshots, demo video, ZIP packaging, **submit** | All | Clean clone runs from the README alone; ZIP opens correctly | ⬜ Not started |
 
@@ -77,14 +77,15 @@ Post-mid-semester work for the full DBMS submission.
 
 | Measure | Status |
 |---|---|
-| Overall completion | ≈ 50% (database layer complete; API complete and exercised end to end) |
-| Phases complete | P1, P2, P3, P4, P5, P6 |
+| Overall completion | ≈ 62% (database, API and the end-to-end user interface all working) |
+| Phases complete | P1 – P7 |
 | Phases in progress | — |
-| Phases not started | P7 – P13 |
+| Phases not started | P8 – P13 |
 
-**The API is working end to end.** What remains before the mid-semester deadline is the UI
-(P7), the automated test suite (P8) and packaging (P9). The end-to-end feature the evaluation
-requires exists at the API level today; P7 puts a browser in front of it.
+**The mid-semester requirement is met.** A user can register, search the catalogue, open a
+package, book a departure and see the booking, with the executed SQL visible at every step —
+verified by driving a real browser through the whole path. What remains before 3 October is the
+automated test suite (P8) and packaging, report and video (P9).
 
 **Deviation from the planned order, and why.** P4 (triggers and procedures) was taken before
 P3 (seed data). The seed script must leave `departure.available_seats` consistent with the
@@ -94,7 +95,7 @@ trigger maintains the count. Building P3 first would have meant writing seat ari
 Python that P4 then made redundant. No deliverable moved; only the order did.
 | End-to-end feature | Not yet working — target D6 (1 Oct) |
 | Automated tests | 0 written — target D7 (2 Oct) |
-| Mid-semester deliverables complete | 11 of 19 checklist items (adds: every data endpoint returning the traced shape with placeholders uninterpolated) |
+| Mid-semester deliverables complete | 13 of 19 checklist items (adds: the working end-to-end feature, and `<QueryTrace>` on every data screen with placeholders uninterpolated) |
 
 ### Delayed or pending tasks
 
@@ -159,7 +160,7 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 | M1 — Requirements and design baselined | 2026-09-26 | ✅ Met |
 | M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | ✅ Met early (26 Sep) — 25 tables, 4 triggers, 2 procedures, 5 roles; concurrency, refund tiers and the privilege matrix all verified |
 | M3 — API returns traced responses on every data route | 2026-09-30 | ✅ Met early (26 Sep) — 9 endpoints, all seven keys, verified |
-| M4 — End-to-end feature working (register → search → book → view) | 2026-10-01 | ⬜ Pending |
+| M4 — End-to-end feature working (register → search → book → view) | 2026-10-01 | ✅ Met early (26 Sep) — driven end to end in headless Chromium, screenshots in `docs/screenshots/` |
 | M5 — Test suite green, including the concurrency test | 2026-10-02 | ⬜ Pending |
 | M6 — Mid-semester package submitted | 2026-10-03 | ⬜ Pending |
 | M7 — Showcase queries, views and indexes complete | 2026-10-19 | ⬜ Pending |

@@ -35,7 +35,7 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phases 1–6 of 13 complete · database and API working end to end
+## Current status — Phases 1–7 of 13 complete · the end-to-end feature works
 
 > **2026-09-26.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
@@ -50,7 +50,7 @@ Three things make it more than a booking form:
 | P4 | Triggers and stored procedures | ✅ Complete — 3 triggers, 2 procedures, concurrency verified |
 | P5 | Roles and grants | ✅ Complete — 5 roles, agent DELETE refused by PostgreSQL |
 | P6 | Backend: pools, tracing, auth, routes | ✅ Complete — 9 endpoints, all traced |
-| P7 | Frontend end-to-end feature | ⬜ Pending |
+| P7 | Frontend end-to-end feature | ✅ Complete — 7 screens, QueryTrace on each |
 | P8 | Test suite and generated test-case table | ⬜ Pending |
 | P9 | UML, README, Compose, report, video | ⬜ Pending |
 | P10–P13 | Showcase queries, remaining screens, ML, DBMS report | ⬜ After mid-semester |
@@ -190,9 +190,10 @@ booking. See [`docs/use_cases.md`](docs/use_cases.md) UC-07 exception flow E2.
 
 ---
 
-## Demo walkthrough *(pending)*
+## Demo walkthrough
 
-The order that shows the system best:
+Screenshots of every screen are in [`docs/screenshots/`](docs/screenshots/). The order that
+shows the system best:
 
 1. **Book something end to end** — register, search, open a package, book two travellers.
 2. **Open the QueryTrace panel** under the booking — the procedure call, `$1 $2 $3` still as
