@@ -157,7 +157,10 @@ test suite (`vitest.config.js`).
 
 # Load sample data — 1200 bookings, deterministic
 pip install -r db/requirements.txt
-python db/seed.py
+./db/reset.sh --seed        # rebuilds AND seeds in one step (recommended)
+
+# or, to seed an already-built database:
+python db/seed.py           # `python3` on macOS/Linux
 
 # API  (leave running)
 cd server && npm install && npm run dev        # → http://127.0.0.1:4000
@@ -189,7 +192,7 @@ anything, and present only so the system can be signed into.
 | `no PostgreSQL server at 127.0.0.1:5432` | The service is not running — `sudo systemctl start postgresql`, or start it from Services on Windows |
 | `JWT_SECRET is unset or still the .env.example placeholder` | Change `JWT_SECRET` in `.env` |
 | `refusing to reset 'postgres'` | `PGDATABASE` was changed to a maintenance database. It should be `travel_tourism` |
-| `no password supplied` from `seed.py` | `.env` is not at the repository root, or was never created |
+| `no password supplied` from `seed.py` | `.env` is not at the repository root, or was never created. If it is there, check you are on a branch that includes the `.env` loader — `grep -c load_dotenv db/seed.py` should print more than 0 |
 | `must be owner of schema public` | The connecting user is not a superuser. `PGADMIN_USER` should be `postgres` |
 | Odd failures naming a database or role with a stray character | `.env` saved with Windows CRLF line endings. `db/reset.sh` strips them, but if you hit this elsewhere, set the file to LF (bottom-right corner in VS Code) |
 | `could not drop and recreate schema` while pgAdmin is open | Another client holds a lock. Close pgAdmin and re-run |

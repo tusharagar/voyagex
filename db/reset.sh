@@ -297,7 +297,16 @@ if [[ "$RUN_SEED" == true ]]; then
     if [[ -f "$SCRIPT_DIR/seed.py" ]]; then
         say ""
         say "  seeding"
-        PGDATABASE="$TARGET_DB" python3 "$SCRIPT_DIR/seed.py" || fail "seeding failed"
+        # `python3` does not exist on a standard Windows install — the launcher
+        # is `python` or `py`. Hardcoding python3 made --seed work on macOS and
+        # Linux and fail on Windows with "command not found", which reads like a
+        # missing Python rather than a missing alias.
+        PY=""
+        for candidate in python3 python py; do
+            if command -v "$candidate" >/dev/null 2>&1; then PY="$candidate"; break; fi
+        done
+        [[ -n "$PY" ]] || fail "no Python interpreter found (tried python3, python, py). Install Python 3.11+ and re-run."
+        PGDATABASE="$TARGET_DB" "$PY" "$SCRIPT_DIR/seed.py" || fail "seeding failed"
     else
         say "  ${DIM}--seed given but db/seed.py does not exist yet (Phase 3)${OFF}"
     fi
