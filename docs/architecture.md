@@ -187,8 +187,9 @@ engineering judgement; an unexamined default is a tutorial followed.
 | Hardening | **helmet, cors, express-rate-limit** | Standard headers; CORS restricted to the Vite origin; rate limits on both console routes, which are the only endpoints that run arbitrary SQL. |
 | Frontend | **React 18 + Vite** | Component reuse for `<QueryTrace>`, which appears on every data screen; Vite for instant reload during a compressed schedule. |
 | — | **No Next.js, no SSR** | There is nothing to server-render: the app is authenticated, localhost-only and has no SEO or first-paint requirement. SSR would add a rendering runtime for no benefit. |
-| — | **No Redux/Zustand, no component library** | State is per-screen. A store would be indirection with no shared state to manage; a component library would bury the plain HTML the evaluator is meant to see through. |
-| Styling | **Tailwind** | Layout without a separate stylesheet to maintain. Deliberately plain output. |
+| — | **No Redux/Zustand, no component library** | The only global state is which user is signed in, held in a small React context. A store would be indirection with nothing to manage; a component library would bury the markup an evaluator is meant to read, and every primitive here is short enough to hand-write. |
+| — | **No photography, no icon font, no webfont** | Category gradients stand in for images and the logo is inline SVG. The system is offline-only (C-06), so there is no image service to call, nothing third-party is bundled, and the UI renders identically on a machine with no network. It also keeps the submission free of assets the group does not own. |
+| Styling | **Tailwind** | Layout without a separate stylesheet to maintain, and a design-token layer (`tailwind.config.js`) that keeps colour and spacing decisions in one reviewable file rather than scattered through components. |
 | Charts | **Recharts** | React-native charting sufficient for five report charts. |
 | SQL display | **react-syntax-highlighter** | Renders SQL with `$n` placeholders intact — the evidence of parameterisation. |
 | ER rendering | **mermaid**, client-side | Renders the `erDiagram` source generated at runtime from `information_schema`, so the diagram cannot drift from the schema. Mermaid cannot express Chen notation, so the conceptual ER model is drawn by hand as well (see §7). |
