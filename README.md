@@ -102,58 +102,80 @@ library) — is in [`docs/architecture.md`](docs/architecture.md) §5.
 
 ## Setup
 
-### Prerequisites
+Written for a machine with nothing installed yet.
 
-- Docker and Docker Compose, **or** PostgreSQL 16 + Node.js 20 + Python 3.11 locally.
+### 1. Install the prerequisites
 
-### 1. Configure
+| | Version | Notes |
+|---|---|---|
+| **PostgreSQL** | 16 | Windows: the [EnterpriseDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads). **Write down the `postgres` password it asks for.** macOS: [Postgres.app](https://postgresapp.com/) or `brew install postgresql@16`. Linux: `sudo apt install postgresql-16` |
+| **Node.js** | 20+ | [nodejs.org](https://nodejs.org), LTS build |
+| **Python** | 3.11+ | Only needed to seed sample data. On Windows tick *Add Python to PATH* |
+
+Check them in a new terminal:
 
 ```bash
-git clone https://github.com/tusharagar/voyagex.git
-cd voyagex
-cp .env.example .env
-# edit .env and replace every "replace_me" value
+psql --version     # psql (PostgreSQL) 16.x
+node --version     # v20 or higher
+python --version   # 3.11+   (python3 on macOS/Linux)
 ```
 
-`.env` is git-ignored. No credentials are committed anywhere in this repository.
+If `psql` is not found on Windows, add `C:\Program Files\PostgreSQL\16\bin` to your PATH.
 
-### 2. Run with Docker Compose *(pending — Phase 9)*
+### 2. Create your `.env`
+
+One file, at the repository root — beside this README, **not** inside `server/`.
+It is git-ignored because it holds passwords; `.env.example` is the committed template.
 
 ```bash
-docker compose up --build        # postgres + api + ml service
-cd client && npm install && npm run dev
+cp .env.example .env          # macOS / Linux
+copy .env.example .env        # Windows cmd
+Copy-Item .env.example .env   # Windows PowerShell
 ```
 
-Then open <http://127.0.0.1:5173>.
+Then change exactly two lines:
 
-### 3. Run locally without Docker *(database works; API and client pending — Phases 6–7)*
+```ini
+PGADMIN_PASSWORD=<the postgres password from the installer>
+JWT_SECRET=<any long random string of your own>
+```
+
+Leave the rest. The `app_customer`, `app_agent`, `app_manager`, `app_dbadmin` and
+`sql_console_ro` passwords are *applied to the database* by `db/reset.sh`, so the file and
+the database always agree. The API refuses to start while `JWT_SECRET` is still the
+placeholder.
+
+This one file is read by `db/reset.sh`, the API (`server/loadEnv.js`), `db/seed.py` and the
+test suite (`vitest.config.js`).
+
+### 3. Build and run
 
 ```bash
-# Database: build the schema from empty. reset.sh creates the database if it
-# does not exist, so this is the only command needed.
-./db/reset.sh                    # 25 tables + constraints today; picks up
-                                 # views, indexes, triggers, procedures and
-                                 # roles automatically as those files land
-./db/reset.sh --test             # same, against the test database
-./db/reset.sh --seed             # rebuild, then seed (Phase 3)
+# Build the database: creates it if absent, then 25 tables, constraints,
+# triggers, procedures and the five roles. Safe to re-run at any time.
+./db/reset.sh                    # Windows: bash db/reset.sh   (Git Bash)
 
-# API
-cd server && npm install && cp ../.env .env && npm run dev   # → http://127.0.0.1:4000
+# Load sample data — 1200 bookings, deterministic
+pip install -r db/requirements.txt
+./db/reset.sh --seed        # rebuilds AND seeds in one step (recommended)
+
+# or, to seed an already-built database:
+python db/seed.py           # `python3` on macOS/Linux
+
+# API  (leave running)
+cd server && npm install && npm run dev        # → http://127.0.0.1:4000
 curl http://127.0.0.1:4000/api/health
 
-# Client
+# Web app  (second terminal)
 cd client && npm install && npm run dev        # → http://127.0.0.1:5173
-
-# Prediction service (optional; the app runs without it)
-cd ml && pip install -r requirements.txt && uvicorn predict_service:app --port 8000
 ```
 
-`./db/reset.sh` drops and rebuilds everything in one command. It is safe to run repeatedly.
+Open <http://127.0.0.1:5173>.
 
 ### 4. Sample credentials
 
-Seeded accounts for demonstration. These are dummy accounts in a local database, not real
-credentials:
+Dummy accounts in your local database, created by `db/seed.py`. Not credentials for
+anything, and present only so the system can be signed into.
 
 | Role | Email | Password |
 |---|---|---|
@@ -162,10 +184,18 @@ credentials:
 | Manager | `manager@example.test` | `voyagex-demo` |
 | DB admin | `dbadmin@example.test` | `voyagex-demo` |
 
-Dummy accounts in a local database, created by `db/seed.py`. They are not
-credentials for anything and exist only so a grader can sign in.
+### Troubleshooting
 
----
+| Symptom | Cause |
+|---|---|
+| `password authentication failed for user "postgres"` | `PGADMIN_PASSWORD` in `.env` is not the password set during install |
+| `no PostgreSQL server at 127.0.0.1:5432` | The service is not running — `sudo systemctl start postgresql`, or start it from Services on Windows |
+| `JWT_SECRET is unset or still the .env.example placeholder` | Change `JWT_SECRET` in `.env` |
+| `refusing to reset 'postgres'` | `PGDATABASE` was changed to a maintenance database. It should be `travel_tourism` |
+| `no password supplied` from `seed.py` | `.env` is not at the repository root, or was never created. If it is there, check you are on a branch that includes the `.env` loader — `grep -c load_dotenv db/seed.py` should print more than 0 |
+| `must be owner of schema public` | The connecting user is not a superuser. `PGADMIN_USER` should be `postgres` |
+| Odd failures naming a database or role with a stray character | `.env` saved with Windows CRLF line endings. `db/reset.sh` strips them, but if you hit this elsewhere, set the file to LF (bottom-right corner in VS Code) |
+| `could not drop and recreate schema` while pgAdmin is open | Another client holds a lock. Close pgAdmin and re-run |
 
 ## Tests
 

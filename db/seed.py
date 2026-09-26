@@ -72,6 +72,31 @@ except ImportError as exc:                                    # pragma: no cover
 # Configuration
 # --------------------------------------------------------------------------
 
+def load_dotenv(path: str) -> None:
+    """Read the repository-root .env into os.environ.
+
+    Parsed by hand rather than with python-dotenv so that seeding needs no pip
+    install beyond what db/requirements.txt already asks for. Variables already
+    present in the environment win, matching how dotenv behaves for the API and
+    how db/reset.sh sources the same file.
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key, value = key.strip(), value.strip().strip('"').strip("'")
+                os.environ.setdefault(key, value)
+    except FileNotFoundError:
+        # Running with the environment supplied another way (Docker Compose,
+        # an exported shell) is perfectly valid.
+        pass
+
+
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
+
 SEED = int(os.environ.get("SEED_RANDOM_SEED", "20260926"))
 
 TARGETS = {
