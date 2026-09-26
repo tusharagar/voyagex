@@ -1,0 +1,121 @@
+@startuml use_case_diagram
+' VoyageX — Travel and Tourism Management System
+' Use-case diagram · SRS v1.0 · 2026-09-26
+' Render: plantuml -tpng docs/uml/use_case_diagram.puml
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+
+actor "Customer"        as CUS
+actor "Agent"           as AGT
+actor "Manager"         as MGR
+actor "DB Administrator" as DBA
+actor "Prediction\nService" as ML <<system>>
+
+rectangle "VoyageX" {
+
+  usecase "UC-01\nRegister Account"          as UC01
+  usecase "UC-02\nLog In"                    as UC02
+  usecase "UC-03\nSearch Packages"           as UC03
+  usecase "UC-04\nManage Profile"            as UC04
+  usecase "UC-05\nManage Travellers"         as UC05
+  usecase "UC-06\nView Package Detail"       as UC06
+  usecase "UC-07\nBook Package"              as UC07
+  usecase "UC-08\nView My Bookings"          as UC08
+  usecase "UC-09\nRecord Payment"            as UC09
+  usecase "UC-10\nCancel Booking"            as UC10
+  usecase "UC-11\nBook on Behalf"            as UC11
+  usecase "UC-12\nManage Catalogue"          as UC12
+  usecase "UC-13\nSubmit Review"             as UC13
+  usecase "UC-14\nAssign Guide"              as UC14
+  usecase "UC-15\nGenerate Revenue Report"   as UC15
+  usecase "UC-16\nBrowse Query Catalogue"    as UC16
+  usecase "UC-17\nView Schema (ERD)"         as UC17
+  usecase "UC-18\nRun Read-only Query"       as UC18
+  usecase "UC-19\nExecute Admin Query"       as UC19
+  usecase "UC-20\nView Audit Log"            as UC20
+  usecase "UC-21\nPredict Cancellation Risk" as UC21
+
+  usecase "Authenticate"        as AUTH
+  usecase "Display Executed SQL" as TRACE
+  usecase "Compute Refund"       as REFUND
+  usecase "Log Privileged\nStatement" as LOG
+}
+
+' ---- Customer ----
+CUS --> UC01
+CUS --> UC02
+CUS --> UC03
+CUS --> UC04
+CUS --> UC05
+CUS --> UC06
+CUS --> UC07
+CUS --> UC08
+CUS --> UC10
+CUS --> UC13
+
+' ---- Agent ----
+AGT --> UC02
+AGT --> UC03
+AGT --> UC09
+AGT --> UC10
+AGT --> UC11
+AGT --> UC08
+
+' ---- Manager ----
+MGR --> UC02
+MGR --> UC12
+MGR --> UC14
+MGR --> UC15
+MGR --> UC16
+MGR --> UC17
+MGR --> UC18
+
+' ---- DB Administrator ----
+DBA --> UC02
+DBA --> UC17
+DBA --> UC18
+DBA --> UC19
+DBA --> UC20
+
+' ---- Prediction service ----
+UC21 --> ML
+AGT --> UC21
+
+' ---- include ----
+UC04 ..> AUTH  : <<include>>
+UC05 ..> AUTH  : <<include>>
+UC07 ..> AUTH  : <<include>>
+UC08 ..> AUTH  : <<include>>
+UC10 ..> AUTH  : <<include>>
+UC11 ..> AUTH  : <<include>>
+UC12 ..> AUTH  : <<include>>
+UC15 ..> AUTH  : <<include>>
+UC19 ..> AUTH  : <<include>>
+
+UC03 ..> TRACE : <<include>>
+UC06 ..> TRACE : <<include>>
+UC07 ..> TRACE : <<include>>
+UC08 ..> TRACE : <<include>>
+UC15 ..> TRACE : <<include>>
+UC16 ..> TRACE : <<include>>
+
+UC19 ..> LOG   : <<include>>
+UC18 ..> LOG   : <<include>>
+
+' ---- extend ----
+REFUND ..> UC10 : <<extend>>\n(cancellation with refund)
+UC09   ..> UC07 : <<extend>>\n(pay after booking)
+UC13   ..> UC08 : <<extend>>\n(review a completed booking)
+UC21   ..> UC08 : <<extend>>\n(risk shown on booking list)
+
+note bottom of UC07
+  Exception flows:
+  E1 insufficient seats
+  E2 concurrent contention
+       for the last seat
+end note
+
+@enduml
