@@ -237,7 +237,7 @@ handout), *SEPM* (mid-semester evaluation handout), *Domain* (the problem statem
 | **FR-17** | A payment shall be recorded against a booking with amount, mode, transaction reference, status and instalment number. | Should | Domain | `transaction_ref` is unique; amount must be positive. |
 | **FR-18** **[MS]** | A customer or agent shall cancel a booking; the system shall compute the refund from the published penalty scale, record the cancellation, and restore the seats. | Must | Domain | Refund is 100% above 30 days before departure, 50% at 15–30 days, 25% at 7–14 days, 0% under 7 days; executed by `cancel_booking`. |
 | **FR-19** | A booking shall be cancellable only once. | Must | Derived | Enforced by the `UNIQUE` constraint on `cancellation.booking_id`; a second attempt fails at the database. |
-| **FR-20** | A customer shall submit exactly one review, with a rating of 1–5, for a booking they made. | Could | Domain | Enforced by the `UNIQUE` constraint on `review.booking_id`. |
+| **FR-20** | A customer shall submit exactly one review, with a rating of 1–5, for a booking they made, once the trip is complete. | Could | Domain | One review per booking enforced by `UNIQUE (review.booking_id)`; the rating range by `chk_review_rating_range`. Reviewer ownership and the completed-booking rule are enforced by `trg_review_valid` — a unique key cannot express either, since both compare the review against another table. |
 
 ## 3.5 Operations and reporting
 
@@ -347,7 +347,7 @@ generated from real runs once Phase 8 completes.
 | FR-17 | UC-09 Record Payment | `server/routes/payments.js` | TC-A-14 |
 | FR-18 | UC-10 Cancel Booking | `db/06_procedures.sql` (`cancel_booking`), `server/routes/bookings.js` | TC-U-02, TC-B-04 |
 | FR-19 | UC-10 exception flow E1 | `db/02_constraints.sql` (`UNIQUE cancellation.booking_id`) | TC-B-05 |
-| FR-20 | UC-13 Submit Review | `server/routes/reviews.js` | TC-A-15 |
+| FR-20 | UC-13 Submit Review | `server/routes/reviews.js`, `db/05_triggers.sql` (`trg_review_valid`) | TC-A-15, TC-T-04 |
 | FR-21 | UC-14 Assign Guide | `db/05_triggers.sql` (`trg_guide_overlap`) | TC-T-02 |
 | FR-22 | UC-15 Generate Revenue Report | `server/routes/reports.js`, `db/queries/q01,q07,q08,q12,q13`, `client/src/pages/Reports.jsx` | TC-A-16 |
 | FR-23 | UC-16 Browse Query Catalogue | `server/routes/reports.js`, `db/queries/q01..q15` | TC-A-17 |

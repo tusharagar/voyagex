@@ -373,8 +373,18 @@ CREATE TABLE guide_assignment (
     fee            NUMERIC(8,2)
 );
 
--- UNIQUE booking_id encodes the rule "only someone who actually booked may
--- review, and only once" as a key rather than as application logic.
+-- UNIQUE booking_id gives exactly one review per booking. That is all it gives,
+-- and it is worth being precise about the limit:
+--
+--   * it does NOT establish that the reviewer is the booking's customer —
+--     customer_id is an independent foreign key that a direct writer could
+--     point at anyone;
+--   * it does NOT establish that the trip happened — the booking foreign key
+--     accepts a PENDING or CANCELLED booking just as readily as a COMPLETED one.
+--
+-- A unique key cannot express either rule: both compare this row against
+-- another table. They are enforced by trg_review_valid in 05_triggers.sql
+-- (SRS FR-20).
 CREATE TABLE review (
     review_id       SERIAL       PRIMARY KEY,
     booking_id      INT          NOT NULL REFERENCES booking (booking_id),
