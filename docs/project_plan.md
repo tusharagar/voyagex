@@ -41,7 +41,7 @@ Seven days, 2026-09-26 to 2026-10-03. Owners use the member labels from
 |---|---|---|---|---|---|
 | D1 | Fri 26 Sep | **P1** SRS, use cases, architecture + 5 ADRs, wireframes, project plan, AI disclosure | All (A leads) | Every FR has an ID, a priority and a traceability row | ✅ **Complete** — committed 26 Sep, design artifacts committed before any implementation code |
 | D2 | Sat 27 Sep | **P2** 25 tables, constraints, `reset.sh`; **P3** seed script started | A | `./db/reset.sh` builds all 25 tables from empty, zero errors | ✅ **P2 complete, a day early** (26 Sep) — 25 tables, 108 constraints (45 check, 29 FK) build from empty in ~1s against PostgreSQL 16.13; verified idempotent over repeated runs and on `--test`. P3 seed script not started. |
-| D3 | Sun 28 Sep | **P3** seeding to target row counts; **P4** triggers and procedures | A | Row counts match the brief; `book_package` decrements seats, cancel restores them | ⬜ Not started |
+| D3 | Sun 28 Sep | **P3** seeding to target row counts; **P4** triggers and procedures | A | Row counts match the brief; `book_package` decrements seats, cancel restores them | ✅ **P4 complete, two days early** (26 Sep) — 3 triggers, 2 procedures. Concurrency proven: contending session blocked 2.05s on the row lock, then failed `INSUFFICIENT_SEATS`; 1 booking, seats 0. All 6 refund-tier boundaries correct. **P3 (seed) still not started** — taken out of order deliberately, see note below. |
 | D4 | Mon 29 Sep | **P5** roles and grants; **P6** pools, `runTraced`, auth routes | A, B | `psql -U app_agent -c "DELETE FROM booking"` is refused by PostgreSQL | ⬜ Not started |
 | D5 | Tue 30 Sep | **P6** catalogue, departure, booking, payment routes | B | Every data endpoint returns all seven traced keys | ⬜ Not started |
 | D6 | Wed 1 Oct | **P7** login, catalogue, package detail, booking flow, my bookings, `<QueryTrace>` | C | A user can register, search, book and see the booking, with SQL visible at each step | ⬜ Not started |
@@ -77,21 +77,28 @@ Post-mid-semester work for the full DBMS submission.
 
 | Measure | Status |
 |---|---|
-| Overall completion | ≈ 15% (requirements and design baselined; database schema built and verified) |
-| Phases complete | P1, P2 |
+| Overall completion | ≈ 25% (design baselined; schema, triggers and procedures built and verified) |
+| Phases complete | P1, P2, P4 |
 | Phases in progress | — |
-| Phases not started | P3 – P13 |
+| Phases not started | P3, P5 – P13 |
+
+**Deviation from the planned order, and why.** P4 (triggers and procedures) was taken before
+P3 (seed data). The seed script must leave `departure.available_seats` consistent with the
+bookings it creates; with the seat trigger in place it no longer has to compute that itself and
+then be trusted to keep it right — it books through the same path the application uses, and the
+trigger maintains the count. Building P3 first would have meant writing seat arithmetic in
+Python that P4 then made redundant. No deliverable moved; only the order did.
 | End-to-end feature | Not yet working — target D6 (1 Oct) |
 | Automated tests | 0 written — target D7 (2 Oct) |
-| Mid-semester deliverables complete | 7 of 19 checklist items (SRS, use cases, architecture, wireframes, plan, AI disclosure, 25 tables built by `reset.sh`) |
+| Mid-semester deliverables complete | 8 of 19 checklist items (SRS, use cases, architecture, wireframes, plan, AI disclosure, 25 tables built by `reset.sh`, 3 triggers + 2 procedures) |
 
 ### Delayed or pending tasks
 
 Nothing is delayed. P2 completed on 26 September, a day ahead of its D2 slot, which buys back
 part of the zero-slack problem in R-01 but does not remove it. The honest statement of position
-is still that **most of the implementation is ahead of us with seven days to run**: P3 through
-P9 are pending. The critical path is P4 → P6 → P7, and P7 is the deliverable the evaluation
-actually requires.
+is still that **most of the implementation is ahead of us with seven days to run**: P3 and P5
+through P9 are pending. The critical path is now P6 → P7, and P7 is the deliverable the
+evaluation actually requires.
 
 ---
 
@@ -117,7 +124,7 @@ Likelihood and impact are High / Medium / Low. Exposure is the combination.
 | ID | Risk | Likelihood | Impact | Exposure | Mitigation | Owner |
 |---|---|---|---|---|---|---|
 | **R-01** | **Seven days to the deadline with no implementation started.** The plan has no slack; any single lost day pushes P7 into the submission day. | **High** | **High** | **Critical** | Fixed drop order agreed in advance (§5); the end-to-end path is built before anything optional; daily exit conditions so a slip is visible on the day it happens, not on 2 Oct | All |
-| R-02 | Concurrency defect found late — the `FOR UPDATE` path appears to work but does not serialise under real contention | Medium | High | High | Write the concurrency test immediately after P4, not in P8; keep the two-terminal `psql` demonstration as an independent check | A |
+| ~~R-02~~ | ~~Concurrency defect found late~~ — **closed 26 Sep.** Verified under real contention: a competing session blocked 2.05 s on the row lock, then failed `INSUFFICIENT_SEATS`, leaving exactly one booking and zero seats. The `CHECK` backstop was separately confirmed to stop a direct write that bypasses the procedure. Reproduction recorded in `concurrency_demo.md`; automated as TC-C-01 in P8. | — | — | **Closed** | Mitigation worked: the check was pulled forward to P4 instead of waiting for P8 | A |
 | R-03 | Members unavailable during exams or other coursework in the same week | High | Medium | High | Modules are separable by design (database / backend / frontend / testing), so one member's absence blocks one layer rather than the whole project; interfaces (the traced response shape) are agreed on D1 so layers can proceed in parallel | All |
 | R-04 | PostgreSQL version or environment mismatch on the evaluator's machine | Medium | High | High | Docker Compose pins PostgreSQL 16; clean-clone test before submission; README documents the manual path as a fallback | D |
 | R-05 | Seeded cancellation data is trivially separable, so the model scores ~0.99 and reads as fabricated | Medium | Medium | Medium | Bias the generator on plausible drivers (low paid ratio, long lead time, prior cancellations, off-season) and add noise to land accuracy at 0.75–0.85; report all five metrics including the confusion matrix | D |
@@ -146,7 +153,7 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 | Milestone | Planned date | Status |
 |---|---|---|
 | M1 — Requirements and design baselined | 2026-09-26 | ✅ Met |
-| M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | 🟡 Partly met — schema and constraints build from empty (26 Sep); triggers and procedures are P4 |
+| M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | ✅ Met early (26 Sep) — 25 tables, 3 triggers, 2 procedures; concurrency and refund tiers verified |
 | M3 — API returns traced responses on every data route | 2026-09-30 | ⬜ Pending |
 | M4 — End-to-end feature working (register → search → book → view) | 2026-10-01 | ⬜ Pending |
 | M5 — Test suite green, including the concurrency test | 2026-10-02 | ⬜ Pending |

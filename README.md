@@ -35,7 +35,7 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phases 1–2 of 13 complete
+## Current status — Phases 1, 2 and 4 of 13 complete
 
 > **2026-09-26.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
@@ -46,8 +46,8 @@ Three things make it more than a booking form:
 |---|---|---|
 | P1 | Requirements and design: SRS, use cases, architecture + ADRs, wireframes, plan | ✅ Complete |
 | P2 | Schema, constraints, `reset.sh` | ✅ Complete — 25 tables, 108 constraints |
-| P3 | Seed data | ⬜ Pending |
-| P4 | Triggers and stored procedures | ⬜ Pending |
+| P3 | Seed data | ⬜ Pending (deliberately after P4 — see project plan) |
+| P4 | Triggers and stored procedures | ✅ Complete — 3 triggers, 2 procedures, concurrency verified |
 | P5 | Roles and grants | ⬜ Pending |
 | P6 | Backend: pools, tracing, auth, routes | ⬜ Pending |
 | P7 | Frontend end-to-end feature | ⬜ Pending |
