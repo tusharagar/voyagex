@@ -271,6 +271,76 @@ COMMENT ON FUNCTION trg_guide_no_overlap_fn() IS
 
 
 -- =============================================================================
--- End of 05_triggers.sql — 3 triggers, 4 functions.
+-- TRIGGER 4 — REVIEW INTEGRITY                                  (SRS FR-20)
+--
+-- UNIQUE (review.booking_id) gives one review per booking. It cannot give the
+-- other two rules, because both compare the review against another table:
+--
+--   * the reviewer must be the customer who made the booking. review.customer_id
+--     is an independent foreign key, so without this check a direct writer could
+--     file a review against someone else's booking.
+--   * the trip must have happened. The booking foreign key accepts a PENDING or
+--     CANCELLED booking as readily as a COMPLETED one.
+--
+-- Added after an automated review of PR #2 pointed out that a comment in
+-- 01_schema.sql claimed the unique key enforced the first of these. It did not.
+-- The comment now states the limit, and this is the enforcement.
+--
+-- customer_id is filled in from the booking when the caller leaves it NULL, so
+-- the common path cannot get it wrong by omission.
+-- =============================================================================
+
+CREATE OR REPLACE FUNCTION trg_review_valid_fn()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_booking_customer  INT;
+    v_booking_status    VARCHAR(12);
+BEGIN
+    SELECT customer_id, status
+      INTO v_booking_customer, v_booking_status
+      FROM booking
+     WHERE booking_id = NEW.booking_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'BOOKING_NOT_FOUND: booking % does not exist', NEW.booking_id
+            USING ERRCODE = 'foreign_key_violation';
+    END IF;
+
+    -- Default the reviewer to the booking's customer rather than rejecting a
+    -- NULL: the caller cannot then silently attribute a review to nobody.
+    IF NEW.customer_id IS NULL THEN
+        NEW.customer_id := v_booking_customer;
+    ELSIF NEW.customer_id <> v_booking_customer THEN
+        RAISE EXCEPTION
+            'REVIEWER_NOT_BOOKING_OWNER: customer % did not make booking %',
+            NEW.customer_id, NEW.booking_id
+            USING ERRCODE = 'check_violation';
+    END IF;
+
+    IF v_booking_status <> 'COMPLETED' THEN
+        RAISE EXCEPTION
+            'BOOKING_NOT_COMPLETED: booking % is %, so it cannot be reviewed yet',
+            NEW.booking_id, v_booking_status
+            USING ERRCODE = 'check_violation';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+-- BEFORE, because it may fill in customer_id as well as reject the row.
+CREATE TRIGGER trg_review_valid
+    BEFORE INSERT OR UPDATE ON review
+    FOR EACH ROW
+    EXECUTE FUNCTION trg_review_valid_fn();
+
+COMMENT ON FUNCTION trg_review_valid_fn() IS
+'Enforces that a review belongs to the booking''s own customer and that the booking is COMPLETED; defaults customer_id from the booking (SRS FR-20).';
+
+
+-- =============================================================================
+-- End of 05_triggers.sql — 4 triggers, 5 functions.
 -- Next: 06_procedures.sql (book_package, cancel_booking).
 -- =============================================================================
