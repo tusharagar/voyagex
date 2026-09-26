@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="820" viewBox="0 0 960 820" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .frame { fill:#fff; stroke:#333; stroke-width:2 }
+    .box   { fill:#f2f2f2; stroke:#777; stroke-width:1.5 }
+    .field { fill:#fff; stroke:#777; stroke-width:1.5 }
+    .btn   { fill:#ddd; stroke:#333; stroke-width:1.5 }
+    .btnp  { fill:#bcd0e5; stroke:#222; stroke-width:2 }
+    .ph    { fill:#bbb }
+    .t     { font-size:14px; fill:#222 }
+    .tsm   { font-size:12px; fill:#555 }
+    .ttl   { font-size:20px; fill:#111; font-weight:bold }
+    .note  { font-size:11px; fill:#a33; font-style:italic }
+    .dash  { fill:none; stroke:#a33; stroke-width:1; stroke-dasharray:4 3 }
+    .trace { fill:#eef2f7; stroke:#5a7ea8; stroke-width:1.5 }
+    .err   { fill:#fbeaea; stroke:#c66; stroke-width:1.5 }
+    .ok    { fill:#eef7ee; stroke:#7a9a7a; stroke-width:1.5 }
+    .stepa { fill:#333 }
+    .stepi { fill:#ccc }
+  </style>
+
+  <rect x="0" y="0" width="960" height="820" fill="#fafafa"/>
+  <text x="24" y="28" class="ttl">Wireframe 04 — Booking Flow</text>
+  <text x="24" y="48" class="tsm">VoyageX · screen 4 of 5 · low fidelity · FR-10 – FR-13, FR-24 · UC-07 · v1.0 2026-09-26</text>
+
+  <rect x="24" y="64" width="912" height="500" class="frame"/>
+  <rect x="24" y="64" width="912" height="36" class="box"/>
+  <rect x="96" y="72" width="320" height="20" class="field"/>
+  <text x="104" y="86" class="tsm">localhost:5173/book/departure/842</text>
+
+  <rect x="24" y="100" width="912" height="48" class="box"/>
+  <text x="48" y="130" class="ttl">VoyageX</text>
+  <text x="790" y="129" class="tsm">signed in as customer</text>
+
+  <!-- stepper -->
+  <circle cx="200" cy="180" r="12" class="stepa"/><text x="196" y="185" font-size="12" fill="#fff">1</text>
+  <text x="222" y="185" class="t">Departure</text>
+  <line x1="300" y1="180" x2="380" y2="180" stroke="#999" stroke-width="2"/>
+  <circle cx="400" cy="180" r="12" class="stepa"/><text x="396" y="185" font-size="12" fill="#fff">2</text>
+  <text x="422" y="185" class="t" font-weight="bold">Travellers</text>
+  <line x1="500" y1="180" x2="580" y2="180" stroke="#ccc" stroke-width="2"/>
+  <circle cx="600" cy="180" r="12" class="stepi"/><text x="596" y="185" font-size="12" fill="#666">3</text>
+  <text x="622" y="185" class="tsm">Confirm</text>
+
+  <!-- selected departure summary -->
+  <rect x="48" y="212" width="560" height="64" class="box"/>
+  <text x="64" y="236" class="t" font-weight="bold">Manali &amp; Kasol Explorer</text>
+  <text x="64" y="258" class="tsm">12 Oct – 17 Oct 2026 · ₹24,500 per seat · 8 seats left</text>
+  <text x="530" y="258" class="tsm" text-decoration="underline">Change</text>
+
+  <!-- traveller picker -->
+  <text x="48" y="308" class="t" font-weight="bold">Who is travelling?</text>
+
+  <rect x="48" y="320" width="560" height="40" class="field"/>
+  <rect x="62" y="332" width="16" height="16" fill="#333"/>
+  <text x="92" y="345" class="t">Rohan Mehta</text>
+  <text x="300" y="345" class="tsm">Self · DOB 1998-04-12</text>
+
+  <rect x="48" y="368" width="560" height="40" class="field"/>
+  <rect x="62" y="380" width="16" height="16" fill="#333"/>
+  <text x="92" y="393" class="t">Anjali Mehta</text>
+  <text x="300" y="393" class="tsm">Spouse · DOB 1999-11-03</text>
+
+  <rect x="48" y="416" width="560" height="40" class="field"/>
+  <rect x="62" y="428" width="16" height="16" fill="#fff" stroke="#777"/>
+  <text x="92" y="441" class="t">Dev Mehta</text>
+  <text x="300" y="441" class="tsm">Child · DOB 2016-07-21</text>
+
+  <text x="48" y="484" class="tsm" text-decoration="underline">+ Add a new traveller</text>
+
+  <!-- order summary -->
+  <rect x="632" y="212" width="280" height="244" class="frame"/>
+  <text x="648" y="238" class="t" font-weight="bold">Summary</text>
+  <line x1="648" y1="248" x2="896" y2="248" stroke="#ddd"/>
+  <text x="648" y="274" class="tsm">Seats requested</text><text x="866" y="274" class="t">2</text>
+  <text x="648" y="300" class="tsm">Price per seat</text><text x="812" y="300" class="t">₹24,500</text>
+  <text x="648" y="326" class="tsm">Discount</text><text x="852" y="326" class="t">₹0</text>
+  <line x1="648" y1="342" x2="896" y2="342" stroke="#ddd"/>
+  <text x="648" y="368" class="t" font-weight="bold">Total</text><text x="800" y="368" class="t" font-weight="bold">₹49,000</text>
+  <text x="648" y="392" class="tsm">A pending payment is created for</text>
+  <text x="648" y="408" class="tsm">the full amount.</text>
+  <rect x="648" y="420" width="248" height="36" class="btnp"/>
+  <text x="712" y="443" class="t" font-weight="bold">Confirm booking</text>
+
+  <!-- states -->
+  <text x="24" y="600" class="ttl">Result states</text>
+
+  <!-- success -->
+  <rect x="24" y="616" width="440" height="180" class="ok"/>
+  <text x="44" y="642" class="t" font-weight="bold">✓  Booking confirmed — #10428</text>
+  <text x="44" y="666" class="tsm">2 travellers · 12 Oct 2026 · ₹49,000 · status CONFIRMED</text>
+  <text x="44" y="686" class="tsm">Balance due ₹49,000 · payment pending</text>
+  <rect x="44" y="700" width="140" height="30" class="btn"/><text x="64" y="720" class="tsm">View booking</text>
+  <rect x="196" y="700" width="140" height="30" class="btn"/><text x="220" y="720" class="tsm">Back to packages</text>
+  <rect x="44" y="742" width="396" height="40" class="trace"/>
+  <text x="54" y="758" class="tsm" font-family="monospace">SELECT book_package($1, $2, $3)</text>
+  <text x="54" y="774" class="tsm" font-family="monospace">params: $1=311  $2=842  $3={4501,4502}   ·  1 row · 47 ms</text>
+
+  <!-- failure -->
+  <rect x="496" y="616" width="440" height="180" class="err"/>
+  <text x="516" y="642" class="t" font-weight="bold">⚠  Not enough seats</text>
+  <text x="516" y="666" class="tsm">You asked for 2 seats; only 1 remains on this departure.</text>
+  <text x="516" y="686" class="tsm">Nothing was booked and you have not been charged.</text>
+  <rect x="516" y="700" width="170" height="30" class="btn"/><text x="536" y="720" class="tsm">Choose another date</text>
+  <rect x="698" y="700" width="140" height="30" class="btn"/><text x="722" y="720" class="tsm">Book 1 seat</text>
+  <rect x="516" y="742" width="396" height="40" class="trace"/>
+  <text x="526" y="758" class="tsm" font-family="monospace">ERROR: INSUFFICIENT_SEATS</text>
+  <text x="526" y="774" class="tsm" font-family="monospace">transaction rolled back · 0 rows written</text>
+
+  <!-- annotations -->
+  <path class="dash" d="M912 438 L930 438"/>
+  <text x="24" y="524" class="note">Confirm calls book_package(customer_id, departure_id, traveller_ids[]) — one procedure, one transaction. The UI never</text>
+  <text x="24" y="540" class="note">inserts a booking row itself, and never checks seat availability itself: the SELECT … FOR UPDATE inside the procedure is the</text>
+  <text x="24" y="556" class="note">only place availability is decided (ADR-02, FR-12). Two customers confirming at the same instant produce exactly one booking.</text>
+</svg>

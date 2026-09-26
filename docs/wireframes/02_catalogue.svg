@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="760" viewBox="0 0 960 760" font-family="Helvetica, Arial, sans-serif">
+  <style>
+    .frame { fill:#fff; stroke:#333; stroke-width:2 }
+    .box   { fill:#f2f2f2; stroke:#777; stroke-width:1.5 }
+    .field { fill:#fff; stroke:#777; stroke-width:1.5 }
+    .btn   { fill:#ddd; stroke:#333; stroke-width:1.5 }
+    .ph    { fill:#bbb }
+    .img   { fill:#e4e4e4; stroke:#aaa }
+    .t     { font-size:14px; fill:#222 }
+    .tsm   { font-size:12px; fill:#555 }
+    .ttl   { font-size:20px; fill:#111; font-weight:bold }
+    .lbl   { font-size:12px; fill:#333 }
+    .note  { font-size:11px; fill:#a33; font-style:italic }
+    .dash  { fill:none; stroke:#a33; stroke-width:1; stroke-dasharray:4 3 }
+    .trace { fill:#eef2f7; stroke:#5a7ea8; stroke-width:1.5 }
+  </style>
+
+  <rect x="0" y="0" width="960" height="760" fill="#fafafa"/>
+  <text x="24" y="28" class="ttl">Wireframe 02 — Package Catalogue (search)</text>
+  <text x="24" y="48" class="tsm">VoyageX · screen 2 of 5 · low fidelity · FR-06, FR-08, FR-24 · UC-03 · v1.0 2026-09-26</text>
+
+  <rect x="24" y="64" width="912" height="672" class="frame"/>
+  <rect x="24" y="64" width="912" height="36" class="box"/>
+  <circle cx="44" cy="82" r="5" fill="#ccc"/><circle cx="60" cy="82" r="5" fill="#ccc"/><circle cx="76" cy="82" r="5" fill="#ccc"/>
+  <rect x="96" y="72" width="360" height="20" class="field"/>
+  <text x="104" y="86" class="tsm">localhost:5173/packages?category=Hill&amp;maxPrice=30000</text>
+
+  <!-- header -->
+  <rect x="24" y="100" width="912" height="48" class="box"/>
+  <text x="48" y="130" class="ttl">VoyageX</text>
+  <text x="170" y="129" class="t" font-weight="bold">Packages</text>
+  <text x="256" y="129" class="t">My bookings</text>
+  <text x="370" y="129" class="t">Travellers</text>
+  <text x="790" y="129" class="tsm">signed in as customer</text>
+  <rect x="890" y="114" width="26" height="24" class="btn"/>
+
+  <!-- filter sidebar -->
+  <rect x="44" y="168" width="220" height="404" class="frame"/>
+  <text x="60" y="194" class="t" font-weight="bold">Filters</text>
+
+  <text x="60" y="224" class="lbl">Destination</text>
+  <rect x="60" y="232" width="188" height="28" class="field"/>
+  <rect x="68" y="242" width="90" height="8" class="ph"/>
+
+  <text x="60" y="284" class="lbl">Category</text>
+  <rect x="60" y="292" width="188" height="28" class="field"/>
+  <text x="68" y="311" class="tsm">Hill ▾</text>
+
+  <text x="60" y="344" class="lbl">Duration (days)</text>
+  <rect x="60" y="352" width="88" height="28" class="field"/>
+  <rect x="160" y="352" width="88" height="28" class="field"/>
+  <text x="152" y="371" class="tsm">–</text>
+
+  <text x="60" y="404" class="lbl">Price range (₹)</text>
+  <rect x="60" y="412" width="88" height="28" class="field"/>
+  <rect x="160" y="412" width="88" height="28" class="field"/>
+  <text x="152" y="431" class="tsm">–</text>
+
+  <text x="60" y="464" class="lbl">Month of travel</text>
+  <rect x="60" y="472" width="188" height="28" class="field"/>
+
+  <rect x="60" y="516" width="110" height="32" class="btn"/>
+  <text x="90" y="537" class="t">Apply</text>
+  <text x="186" y="537" class="tsm" text-decoration="underline">Clear</text>
+
+  <!-- results -->
+  <text x="288" y="188" class="t" font-weight="bold">24 packages</text>
+  <text x="820" y="188" class="tsm">Sort: price ▾</text>
+
+  <g>
+    <rect x="288" y="200" width="628" height="104" class="frame"/>
+    <rect x="300" y="212" width="120" height="80" class="img"/>
+    <text x="306" y="256" class="tsm">image</text>
+    <rect x="436" y="216" width="260" height="12" class="ph"/>
+    <text x="436" y="252" class="tsm">Hill · 6 days / 5 nights · Manali, Kasol</text>
+    <text x="436" y="274" class="tsm">Next departure 12 Oct · from ₹24,500</text>
+    <rect x="770" y="230" width="120" height="30" class="btn"/>
+    <text x="800" y="250" class="t">View</text>
+    <rect x="770" y="268" width="120" height="18" fill="#e8f3e8" stroke="#8a8"/>
+    <text x="780" y="281" class="tsm">8 seats left</text>
+  </g>
+
+  <g>
+    <rect x="288" y="316" width="628" height="104" class="frame"/>
+    <rect x="300" y="328" width="120" height="80" class="img"/>
+    <text x="306" y="372" class="tsm">image</text>
+    <rect x="436" y="332" width="210" height="12" class="ph"/>
+    <text x="436" y="368" class="tsm">Hill · 4 days / 3 nights · Shimla</text>
+    <text x="436" y="390" class="tsm">Next departure 19 Oct · from ₹16,900</text>
+    <rect x="770" y="346" width="120" height="30" class="btn"/>
+    <text x="800" y="366" class="t">View</text>
+    <rect x="770" y="384" width="120" height="18" fill="#fdeeee" stroke="#d99"/>
+    <text x="780" y="397" class="tsm">2 seats left</text>
+  </g>
+
+  <g>
+    <rect x="288" y="432" width="628" height="104" class="frame"/>
+    <rect x="300" y="444" width="120" height="80" class="img"/>
+    <rect x="436" y="448" width="240" height="12" class="ph"/>
+    <text x="436" y="484" class="tsm">Hill · 7 days / 6 nights · Leh</text>
+    <text x="436" y="506" class="tsm">Next departure 3 Nov · from ₹38,000</text>
+    <rect x="770" y="462" width="120" height="30" class="btn"/>
+    <text x="800" y="482" class="t">View</text>
+    <rect x="770" y="500" width="120" height="18" fill="#f0f0f0" stroke="#bbb"/>
+    <text x="780" y="513" class="tsm">Departure full</text>
+  </g>
+
+  <!-- QueryTrace -->
+  <rect x="288" y="552" width="628" height="28" class="trace"/>
+  <text x="300" y="571" class="tsm">▸  24 rows · 38 ms · Show SQL</text>
+  <text x="840" y="571" class="tsm">collapsed</text>
+
+  <rect x="288" y="588" width="628" height="126" class="trace"/>
+  <text x="300" y="606" class="tsm">▾  24 rows · 38 ms · Hide SQL                                       (expanded state)</text>
+  <rect x="300" y="614" width="604" height="56" fill="#fff" stroke="#c3d2e2"/>
+  <text x="308" y="630" class="tsm" font-family="monospace">SELECT p.package_id, p.title, p.duration_days, MIN(d.price) AS from_price</text>
+  <text x="308" y="646" class="tsm" font-family="monospace">FROM package p JOIN departure d ON d.package_id = p.package_id</text>
+  <text x="308" y="662" class="tsm" font-family="monospace">WHERE p.is_active AND p.category = $1 AND d.price &lt;= $2 GROUP BY ...</text>
+  <text x="300" y="690" class="tsm" font-family="monospace">params: $1 = 'Hill'   $2 = 30000</text>
+  <text x="300" y="706" class="tsm">columns: package_id, title, duration_days, from_price</text>
+
+  <!-- annotations -->
+  <path class="dash" d="M264 300 L280 300"/>
+  <text x="44" y="600" class="note">Unknown filter keys are discarded</text>
+  <text x="44" y="616" class="note">against a whitelist before the SQL</text>
+  <text x="44" y="632" class="note">is built — never concatenated</text>
+  <text x="44" y="648" class="note">(NFR-04, TC-A-03).</text>
+  <text x="44" y="676" class="note">Placeholders stay as $1, $2 in the</text>
+  <text x="44" y="692" class="note">trace: that is the proof of</text>
+  <text x="44" y="708" class="note">parameterisation (FR-24).</text>
+
+  <path class="dash" d="M916 396 L930 396"/>
+  <text x="600" y="742" class="tsm">Empty result still renders column headers — they come from res.fields, not from rows[0] (TC-U-03).</text>
+</svg>
