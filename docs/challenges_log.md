@@ -87,6 +87,47 @@ cost a day of the seven, which is accepted.
 
 ---
 
+## C-05 · The seeded cancellation data had almost no learnable signal
+
+**When:** 2026-09-26 · **Status:** Resolved
+
+**Challenge.** The seed generator biases cancellations on plausible drivers so the Phase 12
+model has something real to learn. After the first working run, the bias looked present — the
+cancellation rate fell cleanly from 33% to 9% across paid-ratio buckets — but a held-out
+logistic regression scored **ROC-AUC 0.54** and a random forest 0.59. Barely better than
+guessing, against a target band of 0.75-0.85.
+
+Had this not been measured, it would have surfaced in Phase 12 as a model that could not be
+trained, with a week less time to fix it.
+
+**Attempted and rejected.**
+1. *Assuming the models were at fault.* Scaling the features and raising the iteration limit
+   lifted the logistic regression a little, but the random forest needs no scaling and was also
+   weak, so the problem was in the data.
+2. *Simply turning up the coefficients.* This would have masked the real defect and produced
+   data whose drivers were implausibly strong.
+
+**Solution.** Reading the generator, `prior_cancel_rate` — the strongest intended driver — was
+read during the planning loop but only updated during the writing loop, which runs afterwards.
+It was therefore zero for every booking, and the customer-history term contributed nothing at
+all.
+
+A customer's history can only be known in booking order, so the fix was structural rather than
+a one-line correction: bookings are now sorted by date and cancellations are simulated forward
+through time, each decision updating the history the next one reads. Because the intercept is
+calibrated by bisection over that simulation, the per-booking uniform draws are made once up
+front so the simulation is deterministic in the intercept and the bisection converges.
+
+With the history term live, the noise term was reduced from 0.9 to 0.45 and the coefficients
+raised modestly. Re-measured: **logistic regression ROC-AUC 0.800, random forest 0.779,
+accuracy 0.79-0.80** — inside the target band.
+
+**Cost.** Roughly an hour, and the restructuring of the booking-planning loop. Worth it: the
+lesson is that "the bias is in the code" is not evidence the bias reached the data. The
+per-bucket rates looked convincing while the model saw almost nothing.
+
+---
+
 ## Template for new entries
 
 ```

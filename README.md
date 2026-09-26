@@ -35,7 +35,7 @@ Three things make it more than a booking form:
 
 ---
 
-## Current status — Phases 1, 2 and 4 of 13 complete
+## Current status — Phases 1–4 of 13 complete
 
 > **2026-09-26.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
@@ -46,7 +46,7 @@ Three things make it more than a booking form:
 |---|---|---|
 | P1 | Requirements and design: SRS, use cases, architecture + ADRs, wireframes, plan | ✅ Complete |
 | P2 | Schema, constraints, `reset.sh` | ✅ Complete — 25 tables, 108 constraints |
-| P3 | Seed data | ⬜ Pending (deliberately after P4 — see project plan) |
+| P3 | Seed data | ✅ Complete — 1200 bookings, deterministic |
 | P4 | Triggers and stored procedures | ✅ Complete — 3 triggers, 2 procedures, concurrency verified |
 | P5 | Roles and grants | ⬜ Pending |
 | P6 | Backend: pools, tracing, auth, routes | ⬜ Pending |
@@ -149,17 +149,20 @@ cd ml && pip install -r requirements.txt && uvicorn predict_service:app --port 8
 
 `./db/reset.sh` drops and rebuilds everything in one command. It is safe to run repeatedly.
 
-### 4. Sample credentials *(pending — available after seeding)*
+### 4. Sample credentials
 
 Seeded accounts for demonstration. These are dummy accounts in a local database, not real
 credentials:
 
 | Role | Email | Password |
 |---|---|---|
-| Customer | `customer@example.test` | *(see seed output)* |
-| Agent | `agent@example.test` | *(see seed output)* |
-| Manager | `manager@example.test` | *(see seed output)* |
-| DB admin | `dbadmin@example.test` | *(see seed output)* |
+| Customer | `customer@example.test` | `voyagex-demo` |
+| Agent | `agent@example.test` | `voyagex-demo` |
+| Manager | `manager@example.test` | `voyagex-demo` |
+| DB admin | `dbadmin@example.test` | `voyagex-demo` |
+
+Dummy accounts in a local database, created by `db/seed.py`. They are not
+credentials for anything and exist only so a grader can sign in.
 
 ---
 
