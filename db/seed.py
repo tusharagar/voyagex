@@ -117,7 +117,7 @@ DEPARTURE_LAST  = date(2027, 6, 30)
 
 # Demonstration accounts. These are dummy credentials for a local database and
 # are documented in the README; the hash below is bcrypt of "voyagex-demo".
-DEMO_PASSWORD_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.hK9m"
+DEMO_PASSWORD_HASH = "$2b$12$gK.BGhtcSq2XQ3TDF742i.3uYnTeEKqIEJJYN.9yzZ0csVd3H/QJe"
 
 CATEGORIES = ["Hill", "Beach", "Heritage", "Pilgrimage", "Wildlife", "Urban"]
 PEAK_MONTHS = {3, 4, 5, 6, 10, 11, 12}
