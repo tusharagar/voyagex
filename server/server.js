@@ -9,6 +9,8 @@
  * Bound to 127.0.0.1 and never deployed (SRS constraint C-06).
  */
 
+import { pathToFileURL } from 'node:url';
+
 import './loadEnv.js';   // must be the first import — see the file for why
 import express from 'express';
 import helmet from 'helmet';
@@ -25,6 +27,7 @@ import departureRoutes from './routes/departures.js';
 import bookingRoutes from './routes/bookings.js';
 import paymentRoutes from './routes/payments.js';
 import travellerRoutes from './routes/travellers.js';
+import adminRoutes from './routes/admin.js';
 
 export const app = express();
 
@@ -86,6 +89,7 @@ app.use('/api/departures', departureRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/travellers', travellerRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: `no route for ${req.method} ${req.originalUrl}` });
@@ -101,7 +105,13 @@ const HOST = process.env.API_HOST ?? '127.0.0.1';
 
 // Started only when run directly. Importing this module from the test suite
 // must not bind a port.
-const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+//
+// pathToFileURL, not a template string: a raw `file://${argv[1]}` never
+// matches import.meta.url on Windows, where argv[1] is a backslash path
+// (e.g. "C:\foo\server.js") and import.meta.url is a proper, forward-slash,
+// percent-encoded file:// URL. The mismatch made isMain always false, so
+// the server silently never bound to a port — the process just exited.
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isMain) {
   const server = app.listen(PORT, HOST, () => {

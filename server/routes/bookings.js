@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { poolFor } from '../db/pools.js';
-import { runTraced } from '../utils/runTraced.js';
+import { runTraced, traceFor } from '../utils/runTraced.js';
 import { requireAuth } from '../middleware/auth.js';
 import { createBooking, cancelBooking, refundPercentFor } from '../services/booking.service.js';
 
@@ -92,7 +92,7 @@ router.post('/', requireAuth, async (req, res, next) => {
     return res.status(201).json({
       bookingId: result.bookingId,
       booking: result.booking,
-      trace: result.trace,
+      trace: traceFor(req, result.trace),
     });
   } catch (err) {
     // INSUFFICIENT_SEATS and the rest are translated to HTTP by errorHandler.
@@ -163,7 +163,7 @@ router.get('/', requireAuth, async (req, res, next) => {
     }
 
     const result = await runTraced(sql, params, pool);
-    return res.json({ bookings: result.rows, trace: result });
+    return res.json({ bookings: result.rows, trace: traceFor(req, result) });
   } catch (err) {
     return next(err);
   }
@@ -259,7 +259,7 @@ router.get('/:id', requireAuth, async (req, res, next) => {
         row.status === 'CONFIRMED'
           ? Number((row.amount_paid * refundPercentFor(row.days_until_departure)).toFixed(2))
           : null,
-      trace: [booking, travellers, payments, cancellation],
+      trace: traceFor(req, [booking, travellers, payments, cancellation]),
     });
   } catch (err) {
     return next(err);
@@ -305,7 +305,7 @@ router.patch('/:id/cancel', requireAuth, async (req, res, next) => {
       actorUserId: req.user.userId,
     });
 
-    return res.json({ cancellation: result.cancellation, trace: result.trace });
+    return res.json({ cancellation: result.cancellation, trace: traceFor(req, result.trace) });
   } catch (err) {
     // A second cancellation fails on uq_cancellation_booking_id, which
     // errorHandler turns into 409. The check is the database's, not ours

@@ -7,7 +7,7 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { pools, poolFor, withTransaction } from '../db/pools.js';
-import { runTraced } from '../utils/runTraced.js';
+import { runTraced, traceFor } from '../utils/runTraced.js';
 import { signToken, requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -80,7 +80,7 @@ router.post('/register', async (req, res, next) => {
       customer: result.customer.rows[0],
       // Both statements are returned, so the UI can show the whole
       // registration, not just its last step.
-      trace: [result.user, result.customer],
+      trace: traceFor(req, [result.user, result.customer]),
     });
   } catch (err) {
     // uq_user_account_email. Caught as a constraint violation rather than by a
@@ -147,8 +147,10 @@ router.post('/login', async (req, res, next) => {
         customerId: user.customer_id,
       },
       // The password hash must never leave the server, so the trace for this
-      // route is reported without its rows.
-      trace: { ...found, rows: [], columns: found.columns },
+      // route is reported without its rows — and, beyond that, only at all to
+      // a DB_ADMIN, which login itself cannot yet be (no session exists until
+      // this response returns a token), so this is effectively always empty.
+      trace: traceFor(req, { ...found, rows: [], columns: found.columns }),
     });
   } catch (err) {
     return next(err);
@@ -173,7 +175,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'user not found' });
     }
-    return res.json({ user: result.rows[0], trace: result });
+    return res.json({ user: result.rows[0], trace: traceFor(req, result) });
   } catch (err) {
     return next(err);
   }
