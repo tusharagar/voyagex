@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { poolFor } from '../db/pools.js';
-import { runTraced, buildWhere } from '../utils/runTraced.js';
+import { runTraced, buildWhere, traceFor } from '../utils/runTraced.js';
 
 const router = Router();
 
@@ -50,7 +50,7 @@ router.get('/', async (req, res, next) => {
        LIMIT 200`;
 
     const result = await runTraced(sql, values, poolFor(req));
-    return res.json({ departures: result.rows, filters: { applied, ignored }, trace: result });
+    return res.json({ departures: result.rows, filters: { applied, ignored }, trace: traceFor(req, result) });
   } catch (err) {
     return next(err);
   }
@@ -72,7 +72,7 @@ router.get('/:id', async (req, res, next) => {
       poolFor(req),
     );
     if (result.rowCount === 0) return res.status(404).json({ error: 'departure not found' });
-    return res.json({ departure: result.rows[0], trace: result });
+    return res.json({ departure: result.rows[0], trace: traceFor(req, result) });
   } catch (err) {
     return next(err);
   }

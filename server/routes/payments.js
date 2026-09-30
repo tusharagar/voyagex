@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { poolFor } from '../db/pools.js';
-import { runTraced } from '../utils/runTraced.js';
+import { runTraced, traceFor } from '../utils/runTraced.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -39,7 +39,7 @@ router.get('/', requireAuth, async (req, res, next) => {
           ORDER BY p.payment_date, p.payment_id`;
     const params = isStaff ? [bookingId] : [bookingId, req.user.userId];
     const result = await runTraced(sql, params, poolFor(req));
-    return res.json({ payments: result.rows, trace: result });
+    return res.json({ payments: result.rows, trace: traceFor(req, result) });
   } catch (err) { return next(err); }
 });
 
@@ -91,7 +91,7 @@ router.post('/', requireAuth, async (req, res, next) => {
     return res.status(201).json({
       payment: result.rows[0],
       balance: balance.rows[0],
-      trace: [result, balance],
+      trace: traceFor(req, [result, balance]),
     });
   } catch (err) { return next(err); }
 });

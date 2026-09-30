@@ -82,6 +82,20 @@ export function emptyTrace(sql = '', params = []) {
 }
 
 /**
+ * Gate a trace behind DB_ADMIN. The SQL-visibility requirement this file's
+ * header describes is a grading concern, not a reason to ship raw SQL text,
+ * parameter values and row data to every logged-in role — so only the role
+ * that already has unrestricted table access at the database layer
+ * (07_roles_grants.sql §7) gets to see it at the API layer too.
+ *
+ * Returning undefined rather than null drops the `trace` key entirely on
+ * JSON.stringify, so a non-admin response carries no trace at all.
+ */
+export function traceFor(req, trace) {
+  return req.user?.role === 'DB_ADMIN' ? trace : undefined;
+}
+
+/**
  * Build a parameterised WHERE clause from a whitelist.
  *
  * SRS NFR-04: no user input is ever concatenated into a statement. Values become

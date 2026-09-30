@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { poolFor } from '../db/pools.js';
-import { runTraced, buildWhere } from '../utils/runTraced.js';
+import { runTraced, buildWhere, traceFor } from '../utils/runTraced.js';
 
 const router = Router();
 
@@ -76,7 +76,7 @@ router.get('/', async (req, res, next) => {
     return res.json({
       packages: result.rows,
       filters: { applied, ignored },
-      trace: result,
+      trace: traceFor(req, result),
     });
   } catch (err) {
     return next(err);
@@ -158,7 +158,7 @@ router.get('/:id', async (req, res, next) => {
       itinerary: itinerary.rows,
       destinations: destinations.rows,
       hotels: hotels.rows,
-      trace: [pkg, itinerary, destinations, hotels],
+      trace: traceFor(req, [pkg, itinerary, destinations, hotels]),
     });
   } catch (err) {
     return next(err);

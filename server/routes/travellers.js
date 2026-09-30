@@ -10,7 +10,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { poolFor } from '../db/pools.js';
-import { runTraced } from '../utils/runTraced.js';
+import { runTraced, traceFor } from '../utils/runTraced.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -47,7 +47,7 @@ router.get('/', requireAuth, async (req, res, next) => {
       [req.user.userId],
       poolFor(req),
     );
-    return res.json({ travellers: result.rows, trace: result });
+    return res.json({ travellers: result.rows, trace: traceFor(req, result) });
   } catch (err) { return next(err); }
 });
 
@@ -71,7 +71,7 @@ router.post('/', requireAuth, async (req, res, next) => {
       [customerId, fullName, gender ?? null, dateOfBirth ?? null, passportNo ?? null, relation ?? null],
       poolFor(req),
     );
-    return res.status(201).json({ traveller: result.rows[0], trace: result });
+    return res.status(201).json({ traveller: result.rows[0], trace: traceFor(req, result) });
   } catch (err) { return next(err); }
 });
 
@@ -104,7 +104,7 @@ router.put('/:id', requireAuth, async (req, res, next) => {
       poolFor(req),
     );
     if (result.rowCount === 0) return res.status(404).json({ error: 'traveller not found' });
-    return res.json({ traveller: result.rows[0], trace: result });
+    return res.json({ traveller: result.rows[0], trace: traceFor(req, result) });
   } catch (err) { return next(err); }
 });
 
@@ -137,7 +137,7 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
       return res.status(409).json({
         error: 'this traveller is on an existing booking and cannot be removed',
         bookings: Number(used.rows[0].bookings),
-        trace: used,
+        trace: traceFor(req, used),
       });
     }
 
@@ -152,7 +152,7 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
       pool,
     );
     if (result.rowCount === 0) return res.status(404).json({ error: 'traveller not found' });
-    return res.json({ deleted: result.rows[0], trace: result });
+    return res.json({ deleted: result.rows[0], trace: traceFor(req, result) });
   } catch (err) { return next(err); }
 });
 
