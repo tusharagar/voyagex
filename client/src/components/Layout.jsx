@@ -22,6 +22,9 @@ export default function Layout({ children }) {
             <NavLink to="/" end className={navClass}>Packages</NavLink>
             {user && <NavLink to="/bookings" className={navClass}>My bookings</NavLink>}
             {user && <NavLink to="/travellers" className={navClass}>Travellers</NavLink>}
+            {user?.role_name === 'DB_ADMIN' && (
+              <NavLink to="/admin/query" className={navClass}>Query console</NavLink>
+            )}
           </nav>
           <div className="ml-auto flex items-center gap-2">
             {user ? (
