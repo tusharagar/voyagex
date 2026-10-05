@@ -1,7 +1,7 @@
 # VoyageX — Travel and Tourism Management System
 
 A travel-agency management system built around a PostgreSQL database that enforces its own
-business rules, with a front end that shows you the SQL behind every screen.
+business rules, with a front end that shows a DB administrator the SQL behind every screen.
 
 Submitted for two courses from one codebase:
 
@@ -28,16 +28,19 @@ Three things make it more than a booking form:
 2. **Access control is PostgreSQL's job.** Five database roles, one connection pool each. An
    agent attempting `DELETE FROM booking` is refused by PostgreSQL with SQLSTATE 42501, not by
    a middleware check that could be forgotten on the next route.
-3. **Every screen shows its SQL.** Each data response carries the statement, its bound
-   parameters (`$1`, `$2` — left uninterpolated on purpose), the column names, the row count
-   and the execution time. The ER diagram is generated at request time from
-   `information_schema`, so it cannot drift from the live schema.
+3. **Every screen shows its SQL — to a DB administrator.** Each data response carries the
+   statement, its bound parameters (`$1`, `$2` — left uninterpolated on purpose), the column
+   names, the row count and the execution time, but only when the signed-in role is `DB_ADMIN`:
+   the same data exposed to every role turned out to be a real data leak — a customer's own
+   screen was shipping other customers' row data to whoever was looking (`docs/SRS.md` §3.6).
+   DB_ADMIN also gets a custom-query console with a clickable table/column browser. A live ER
+   diagram generated from `information_schema` is designed but not yet built.
 
 ---
 
-## Current status — Phases 1–8 of 13 complete · 95 tests passing
+## Current status — Phases 1–8 of 13 complete, part of P11 early · 101 tests passing
 
-> **2026-09-26.** Requirements and design are baselined, and the database schema builds.
+> **Updated 2026-10-02.** Requirements and design are baselined, and the database schema builds.
 > Setup steps below are marked *(pending)* where the code has not landed yet. This section is
 > updated as each phase completes; see [`docs/project_plan.md`](docs/project_plan.md) for the
 > schedule and actuals.
@@ -49,11 +52,13 @@ Three things make it more than a booking form:
 | P3 | Seed data | ✅ Complete — 1200 bookings, deterministic |
 | P4 | Triggers and stored procedures | ✅ Complete — 3 triggers, 2 procedures, concurrency verified |
 | P5 | Roles and grants | ✅ Complete — 5 roles, agent DELETE refused by PostgreSQL |
-| P6 | Backend: pools, tracing, auth, routes | ✅ Complete — 9 endpoints, all traced |
-| P7 | Frontend end-to-end feature | ✅ Complete — 7 screens, QueryTrace on each |
-| P8 | Test suite and generated test-case table | ✅ Complete — 95 tests, table generated |
+| P6 | Backend: pools, tracing, auth, routes | ✅ Complete — 9 endpoints traced for DB_ADMIN (narrowed 2026-10-02, see above) |
+| P7 | Frontend end-to-end feature | ✅ Complete — 7 screens, QueryTrace on each (DB_ADMIN only, as of 2026-10-02) |
+| P8 | Test suite and generated test-case table | ✅ Complete — 101 tests, table generated |
 | P9 | UML, README, Compose, report, video | ⬜ Pending |
-| P10–P13 | Showcase queries, remaining screens, ML, DBMS report | ⬜ After mid-semester |
+| P10 | Showcase queries, views, indexes | ⬜ After mid-semester |
+| P11 | Remaining frontend | **Custom query console ✅ done early (2026-10-02)** — DB_ADMIN only, read-only. Agent dashboard, reports, query catalogue, ERD viewer, audit-log screen ⬜ pending |
+| P12–P13 | ML, DBMS report | ⬜ After mid-semester |
 
 ---
 
@@ -201,7 +206,7 @@ anything, and present only so the system can be signed into.
 
 ```bash
 npm install               # once, at the repository root
-npm test                  # 95 tests: vitest + supertest against a disposable travel_test DB
+npm test                  # 101 tests: vitest + supertest against a disposable travel_test DB
 npm run test:coverage     # with a coverage summary
 npm run test:report       # runs the suite AND regenerates docs/test_cases.md from it
 ```
@@ -232,12 +237,22 @@ Screenshots of every screen are in [`docs/screenshots/`](docs/screenshots/). The
 shows the system best:
 
 1. **Book something end to end** — register, search, open a package, book two travellers.
-2. **Open the QueryTrace panel** under the booking — the procedure call, `$1 $2 $3` still as
-   placeholders, timing.
-3. **Run the concurrency test** and watch one of two contending bookings fail with
+2. **Log in as `dbadmin@example.test`** (see Sample credentials above) and repeat a read —
+   **only this role sees the QueryTrace panel.** Every other role's screens carry no SQL at all;
+   this is a deliberate change from the original design — see the FR-24 note in
+   [`docs/SRS.md`](docs/SRS.md) §3.6 for why, and don't expect to see the panel while still
+   signed in as the customer from step 1.
+3. **Open "Query console"** in the nav (visible only to DB_ADMIN) — click a table in the
+   sidebar to see its columns, click **Add** to drop a table or column name into the SQL box,
+   run it, and try a write (`DELETE FROM package WHERE package_id = 1`): PostgreSQL itself
+   refuses it, not the route.
+4. **Run the concurrency test** and watch one of two contending bookings fail with
    `INSUFFICIENT_SEATS` while seats land exactly at zero.
-4. **Refuse a deletion** — `psql -U app_agent -c "DELETE FROM booking"` → SQLSTATE 42501.
-5. **Open the schema viewer** — the ERD is generated from `information_schema`, live.
+5. **Refuse a deletion** — `psql -U app_agent -c "DELETE FROM booking"` → SQLSTATE 42501.
+
+Not yet built: a rendered, live ERD screen (FR-25) and a dedicated audit-log viewer (FR-28) —
+`admin_query_log` is populated and can be read today through step 3's console, just not through
+a screen of its own. See [`docs/architecture.md`](docs/architecture.md) §4 for the full status.
 
 ---
 

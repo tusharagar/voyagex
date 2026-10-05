@@ -3,7 +3,7 @@
 **Project:** VoyageX — Travel and Tourism Management System
 **Courses:** DBMS (project topic 10) · Software Engineering and Project Management
 **Required by:** SEPM mid-semester evaluation handout, §6 (Academic Integrity and Use of AI Tools)
-**Last updated:** 2026-09-26
+**Last updated:** 2026-10-02
 
 This disclosure is maintained as the project proceeds. Each entry records the tool, what it was
 used for, what it produced, and what the group verified or changed. It is updated in the same
@@ -76,7 +76,10 @@ of AI assistance: SQL scaffolding, boilerplate routes, test scaffolding, and doc
 
 | Date | Artifact | Generated content | Verification / modification by the group |
 |---|---|---|---|
-| | | | |
+| 2026-10-02 | `server/utils/runTraced.js`, 13 response sites across `server/routes/*.js`, `client/src/pages/AdminQuery.jsx`, `server/routes/admin.js` (new) | A security fix restricting the FR-24 SQL trace to DB_ADMIN sessions only, after review found it was shipping bound parameter values and row data to every role; a new DB_ADMIN-only read-only SQL console (routes `POST /api/admin/query`, `GET /api/admin/schema`) with a clickable table/column browser on the client | Verified live against a running server with all four roles (CUSTOMER, AGENT, MANAGER, DB_ADMIN) via direct HTTP requests before being accepted, not just by reading the code; a write attempt through the console was confirmed refused by PostgreSQL's own grant, not by application logic |
+| 2026-10-02 | `tests/integration/api.test.js`, `tests/fixtures/sample_data.sql`, `tests/globalSetup.js`, `tests/setup.js` | 6 new automated tests for the above (TC-A-24 … TC-A-29); fixes to 6 existing tests that the trace change broke; a real bug fix to the fixture's seeded password hash (same root cause as the `db/seed.py` bug below) plus a missing DB_ADMIN seed row; a Windows portability fix to the test harness itself (`execFileSync` could not run a shebang script via Windows `CreateProcess` — `EFTYPE`) | Full suite re-run against a real, disposable `travel_test` database before and after each change, not assumed from reading the diff: 95 → 101 passing, 0 failing. `docs/test_cases.md` regenerated from that real run (`npm run test:report`), not edited by hand. |
+| 2026-10-02 | `db/seed.py` (`DEMO_PASSWORD_HASH`) | A bug fix: the documented demo password `voyagex-demo` never actually matched the committed hash — it was a generic tutorial example hash, not one generated from that password. Reported by the user as a login failure, root-caused with `bcrypt.compare`, and fixed with a correctly generated hash | Verified with `bcrypt.compare('voyagex-demo', <new hash>)` returning `true` before committing, and by a live login against the already-seeded development database afterward |
+| 2026-10-02 | `docs/SRS.md`, `docs/architecture.md`, `docs/use_cases.md`, `docs/project_plan.md`, `docs/problem_statement.md`, `docs/challenges_log.md`, `README.md` | Documentation updated to match the above: FR-24/FR-26/FR-27 requirement text revised, the traceability matrix updated to real (not placeholder) test IDs, UC-19 rewritten to describe what was actually built rather than the originally planned preview/commit design, three new `challenges_log.md` entries (C-07, C-08, C-09), the README's demo walkthrough corrected so it no longer tells a reader to look for the trace panel on a screen that no longer shows it | Each claim cross-checked against the actual code and a real test run rather than drafted from the feature description alone — e.g. the "101 tests passing" and "25 tables" figures quoted in these docs are copied from real command output captured during this session, not estimated |
 
 ---
 

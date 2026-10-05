@@ -251,11 +251,37 @@ handout), *SEPM* (mid-semester evaluation handout), *Domain* (the problem statem
 
 | ID | Requirement | Priority | Source | Acceptance condition |
 |---|---|---|---|---|
-| **FR-24** **[MS]** | Every API response that executes SQL shall return the SQL text, bound parameters, column names, rows, row count and execution time; every data screen shall display them. | Must | DBMS | Placeholders remain uninterpolated (`$1`, not the value), which is the evidence of parameterisation. |
-| **FR-25** | The system shall render an entity-relationship diagram generated at request time from `information_schema`, with a toggle to hide system tables, and a link to the conceptual ER model. | Should | DBMS | The diagram reflects the live schema; it cannot drift from it. |
-| **FR-26** | A manager or administrator shall run ad-hoc read-only SQL in a console that executes inside a `READ ONLY` transaction with a statement timeout and always rolls back. | Should | DBMS | Multi-statement input is rejected; write attempts fail; errors return message and position. |
-| **FR-27** | An administrator shall execute arbitrary SQL in a console that defaults to preview (rollback) and commits only on explicit confirmation; every execution, successful or failed, shall be logged. | Could | DBMS | The log write occurs on a separate connection outside the caller's transaction, so a rollback cannot erase it. |
-| **FR-28** | A manager or administrator shall view the booking audit trail and the privileged-statement log. | Could | DBMS | `booking_audit` rows are written only by trigger; no application code inserts into it. |
+| **FR-24** **[MS]** | Every API response that executes SQL shall return the SQL text, bound parameters, column names, rows, row count and execution time; this shall be returned, and displayed, **only to a DB_ADMIN session.** | Must | DBMS | Placeholders remain uninterpolated (`$1`, not the value), which is the evidence of parameterisation. *Revised 2026-10-02 — see note below the table.* |
+| **FR-25** | The system shall render an entity-relationship diagram generated at request time from `information_schema`, with a toggle to hide system tables, and a link to the conceptual ER model. | Should | DBMS | The diagram reflects the live schema; it cannot drift from it. **Not yet implemented** (2026-10-02): `GET /api/admin/schema` returns table/column metadata for the console's picker UI, which is a different, narrower thing than this requirement's rendered ERD. |
+| **FR-26** | A DB_ADMIN shall run ad-hoc read-only SQL in a console that executes inside a `READ ONLY` transaction and always rolls back. | Should | DBMS | Write attempts fail with PostgreSQL's own refusal, not a route-level check; errors return the database's own message. **Implemented early, 2026-10-02** — narrowed from "manager or administrator" to DB_ADMIN only; see note below the table. |
+| **FR-27** | Every execution against the console, successful or failed, shall be logged, on a connection separate from the audited statement's own transaction. | Could | DBMS | The log write occurs on a separate connection outside the caller's transaction, so a rollback cannot erase it. **Implemented early, 2026-10-02**, as part of FR-26 — but only this logging clause: the write-capable preview/commit console this requirement originally specified was descoped. See note below the table. |
+| **FR-28** | A manager or administrator shall view the booking audit trail and the privileged-statement log. | Could | DBMS | `booking_audit` rows are written only by trigger; no application code inserts into it. **Not yet implemented** as a dedicated screen; `admin_query_log` is readable today by a DB_ADMIN through the FR-26 console itself (`SELECT * FROM admin_query_log`), which covers the data access this requirement wants without yet providing the screen. |
+
+> **Note on FR-24, FR-26, FR-27 (added 2026-10-02).** The database-transparency feature
+> originally meant every data screen to show its SQL to every signed-in role, including an
+> anonymous customer browsing the catalogue. Building the rest of the system surfaced the actual
+> consequence of that: the trace carries not just the SQL *text* but the bound parameter
+> *values*, full row data and column names — a customer's own screen was shipping other
+> customers' data details embedded in query results, and raw SQL/schema information, to whichever
+> role happened to be looking at it. `server/utils/runTraced.js` now exports `traceFor(req,
+> trace)`, which attaches the trace only when `req.user.role === 'DB_ADMIN'`; every other
+> response omits the `trace` key entirely rather than sending an empty one. The transparency
+> requirement is still met — an evaluator can see the SQL behind any screen — just from a
+> DB_ADMIN session rather than from whichever account happens to be driving the demo. The
+> mid-semester walkthrough (§5.2) must be read with this in mind: **the FR-24 evidence now needs a
+> DB_ADMIN login, not the customer flow the walkthrough otherwise follows.**
+>
+> The same session also built the console FR-26 and FR-27 anticipated, five weeks ahead of its
+> planned W4 slot (`project_plan.md` §3), but narrower than originally specified in two
+> deliberate ways: it is DB_ADMIN-only, not "manager or administrator" (a manager's database role
+> was never granted anything beyond the catalogue, and extending it for this one feature was not
+> asked for); and it is read-only only — there is no write-capable tier with FR-27's
+> preview/confirm/commit flow. The console runs every statement as `sql_console_ro`, a role
+> granted `SELECT` and nothing else, anywhere (`07_roles_grants.sql` §6), so a write is refused by
+> PostgreSQL itself even in a DB_ADMIN session. A raw-SQL write path reachable from a web UI was
+> judged a disproportionate increase in blast radius for a feature nobody had asked to actually
+> use for writes — `app_dbadmin` already has unrestricted write access through ordinary `psql` for
+> the rare case that needs it.
 
 ## 3.7 Intelligent features
 
@@ -280,7 +306,7 @@ verified and is not worth writing.
 | **NFR-05** **[MS]** | Security | Passwords shall be stored as bcrypt hashes with a cost factor of at least 10. | Inspection of `user_account.password_hash`; no reversible storage. |
 | **NFR-06** | Auditability | Every privileged SQL execution shall be logged with user, database role, statement, status, rows affected and duration, including failures, and the log shall survive rollback of the statement logged. | Log written on a separate pool connection; verified by executing a rolled-back statement and finding its log row. |
 | **NFR-07** **[MS]** | Portability | The system shall run on a clean machine using only the instructions in the README. | Verified by a clean clone and a Docker Compose start before submission. |
-| **NFR-08** **[MS]** | Transparency | Every screen that displays data shall expose the SQL that produced it within one interaction. | `<QueryTrace>` present on every data page; checked screen by screen. |
+| **NFR-08** **[MS]** | Transparency | Every screen that displays data shall expose the SQL that produced it within one interaction, **to a DB_ADMIN session.** | `<QueryTrace>` present on every data page; renders only when the API has attached a trace, which it does only for DB_ADMIN (`traceFor`, `server/utils/runTraced.js`). *Revised 2026-10-02 — see the FR-24 note in §3.6.* |
 | **NFR-09** | Data integrity | Invalid states shall be rejected by database constraints rather than by application validation alone: negative seat counts, end date before start date, rating outside 1–5, non-positive payment amounts. | `CHECK` constraints present; TC-T-03 confirms the seat backstop. |
 | **NFR-10** | Maintainability | The schema shall rebuild from empty with a single command, and the test suite shall run against a disposable database. | `./db/reset.sh` completes with zero errors; CI-style local run. |
 | **NFR-11** | Usability | A user who has registered shall be able to complete a booking without instruction, in no more than five screens. | Walkthrough against the wireframes; confirmed in the demonstration video. |
@@ -309,12 +335,14 @@ view booking**, together with the guarantees that make it worth demonstrating.
 | Access | FR-01, FR-02, FR-03, FR-05 |
 | Catalogue | FR-06, FR-07, FR-08 |
 | Booking | FR-10, FR-11, FR-12, FR-13, FR-14, FR-18 |
-| Transparency | FR-24 |
+| Transparency | FR-24 — **demonstrate from a DB_ADMIN login, not the customer flow above** (see the FR-24 note in §3.6) |
 | Quality attributes | NFR-01, NFR-02, NFR-03, NFR-04, NFR-05, NFR-07, NFR-08, NFR-12 |
 
 Deferred to the second half: reporting and the query catalogue (FR-22, FR-23), the schema
-viewer and consoles (FR-25, FR-26, FR-27, FR-28), guide assignment (FR-21), reviews (FR-20),
+viewer and audit-log screen (FR-25, FR-28), guide assignment (FR-21), reviews (FR-20),
 catalogue management (FR-09), and the whole machine-learning component (FR-29, FR-30).
+**No longer deferred:** FR-26 and FR-27's logging clause were built early, 2026-10-02 — see the
+note under §3.6.
 
 ---
 
@@ -351,11 +379,11 @@ generated from real runs once Phase 8 completes.
 | FR-21 | UC-14 Assign Guide | `db/05_triggers.sql` (`trg_guide_overlap`) | TC-T-02 |
 | FR-22 | UC-15 Generate Revenue Report | `server/routes/reports.js`, `db/queries/q01,q07,q08,q12,q13`, `client/src/pages/Reports.jsx` | TC-A-16 |
 | FR-23 | UC-16 Browse Query Catalogue | `server/routes/reports.js`, `db/queries/q01..q15` | TC-A-17 |
-| FR-24 | all data use cases (include) | `server/utils/runTraced.js`, `client/src/components/QueryTrace.jsx` | TC-U-03, TC-A-18 |
-| FR-25 | UC-17 View Schema | `server/routes/schema.js`, `client/src/pages/Schema.jsx` | TC-A-19 |
-| FR-26 | UC-18 Run Read-only Query | `server/routes/console.js`, role `sql_console_ro` | TC-R-02, TC-A-20 |
-| FR-27 | UC-19 Execute Admin Query | `server/routes/admin.js`, `db/01_schema.sql` (`admin_query_log`) | TC-R-03, TC-A-21 |
-| FR-28 | UC-20 View Audit Log | `server/routes/admin.js`, `db/05_triggers.sql` (`trg_booking_audit`) | TC-T-01 |
+| FR-24 | all data use cases (include) | `server/utils/runTraced.js` (`traceFor`), `client/src/components/QueryTrace.jsx` | TC-U-03, TC-A-18, TC-A-19, TC-A-20, **TC-A-24** (the DB_ADMIN-only gate itself) |
+| FR-25 | UC-17 View Schema | *not yet implemented* — `GET /api/admin/schema` is a narrower, different thing; see the FR-24/26/27 note above | — |
+| FR-26 | UC-18 Run Read-only Query | `server/routes/admin.js` (`POST /api/admin/query`), role `sql_console_ro` | TC-A-25, TC-A-26, TC-R-02 (the role's own grants) |
+| FR-27 | — (folded into UC-18 above) | `server/routes/admin.js`, `db/01_schema.sql` (`admin_query_log`) | **TC-A-29** (logs both a success and a refusal) |
+| FR-28 | UC-20 View Audit Log | *not yet implemented as a screen* — `trg_booking_audit` writes the data (`db/05_triggers.sql`), readable today via FR-26's console | TC-T-01 (the trigger, not a viewer) |
 | FR-29 | UC-21 Predict Cancellation Risk | `ml/features.sql`, `ml/predict_service.py`, `server/routes/ml.js` | TC-A-22, `ml/tests/test_features.py` |
 | FR-30 | UC-21 (extend) | `server/routes/ml.js`, `client/src/pages/AgentDashboard.jsx` | TC-A-23 |
 
@@ -370,7 +398,7 @@ Non-functional requirements trace as follows:
 | NFR-05 | Inspection of stored hashes; bcrypt cost asserted in `server/routes/auth.js` |
 | NFR-06 | Audit-after-rollback check against `admin_query_log` |
 | NFR-07 | Clean-clone Docker Compose run before submission |
-| NFR-08 | Screen-by-screen checklist in `test_cases.md` |
+| NFR-08 | TC-A-18 … TC-A-20 (trace present for DB_ADMIN), TC-A-24 (absent for everyone else) |
 | NFR-09 | TC-T-03 and constraint review |
 | NFR-10 | `./db/reset.sh` exit status; test-suite setup |
 | NFR-11 | Walkthrough against `docs/wireframes/` |
@@ -383,3 +411,4 @@ Non-functional requirements trace as follows:
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.0 | 2026-09-26 | Project group | Initial baseline for the mid-semester evaluation |
+| 1.1 | 2026-10-02 | Project group | FR-24/NFR-08 restricted database transparency to DB_ADMIN sessions (the trace was shipping bound parameter values and row data to every role, including anonymous catalogue browsing); FR-26 built early and narrowed to DB_ADMIN-only, read-only-only; FR-27 narrowed to its logging clause (the write-capable preview/commit console was descoped); FR-25 and FR-28 remain unimplemented. Traceability matrix updated with real test IDs from a passing 101-test run. |

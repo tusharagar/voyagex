@@ -164,6 +164,111 @@ broken".
 
 ---
 
+## C-07 · The database-transparency feature was shipping more than SQL text
+
+**When:** 2026-10-02 · **Status:** Resolved
+
+**Challenge.** FR-24 was built exactly as specified: every traced response carried `sql`,
+`params`, `columns`, `rows`, `rowCount`, `executionMs` and `plan`, shown on every data screen to
+every role, including an anonymous visitor browsing the catalogue. Building the rest of the
+system on top of it surfaced what that actually meant in practice — `params` is the bound
+*values*, not just placeholder names, and `rows` is the full result set. A customer's own screen
+was shipping other customers' row data and the live schema's shape to whichever role, or
+whichever unauthenticated request, happened to be looking.
+
+**Attempted and rejected.** Redacting `rows`/`params` specifically while keeping `sql` visible
+everywhere. Rejected: the SQL text alone, plus column names, already discloses schema structure
+to an anonymous caller, and a transparency feature that silently withholds half its own evidence
+is a worse answer than an honest scope change.
+
+**Solution.** Gate the whole trace behind role rather than redact pieces of it.
+`server/utils/runTraced.js` gained `traceFor(req, trace)`, returning the trace only when
+`req.user.role === 'DB_ADMIN'`, `undefined` otherwise — and `undefined` drops the JSON key
+entirely rather than sending an empty placeholder. Thirteen response sites across six route
+files were updated to call it. The client needed no changes: `QueryTrace.jsx` already no-ops on
+a missing trace. Verified live against all four roles before committing, and later covered by
+TC-A-18 … TC-A-20 (present for DB_ADMIN) and TC-A-24 (absent for everyone else).
+
+**Consequence for the mid-semester evidence.** FR-24's acceptance condition — "the executed SQL
+is visible" — now has to be demonstrated from a DB_ADMIN login, not from the customer flow the
+mid-semester walkthrough otherwise follows. `SRS.md` §3.6 and §5.2 both carry this note; the
+demonstration video script must account for it.
+
+---
+
+## C-08 · The documented demo password never actually worked
+
+**When:** 2026-10-02 · **Status:** Resolved
+
+**Challenge.** `db/seed.py`'s `DEMO_PASSWORD_HASH` was commented as "bcrypt of `voyagex-demo`",
+used for every seeded demo account (`manager@example.test`, `dbadmin@example.test`, and 400+
+generated customers). It was reported directly by a user trying to log in as `manager` after
+following the README: 401 on the documented credentials.
+
+**Diagnosis.** `bcrypt.compare('voyagex-demo', DEMO_PASSWORD_HASH)` returns `false`. The hash is
+a generic example value that circulates in bcrypt tutorials — apparently copied in rather than
+actually generated from the stated password — so **no seeded account's documented password had
+ever worked**, for any role, since the seed script was written.
+
+**Attempted and rejected.** Nothing — this is the rare case where the first hypothesis (the
+comment is simply wrong) was also the right one, confirmed in one line with `bcrypt.compare`
+before touching anything.
+
+**Solution.** Generated the real hash of `voyagex-demo` at the project's own cost factor (12)
+and replaced `DEMO_PASSWORD_HASH` in `seed.py`. The already-seeded development database was
+fixed in place with a single `UPDATE … WHERE password_hash = '<old value>'`, so existing
+non-demo (real customer-registered) accounts were untouched — 414 rows updated. The identical
+bug, with the identical comment, existed independently in `tests/fixtures/sample_data.sql`
+(different file, same copy-pasted hash) and was fixed the same way, which is also how it was
+noticed that the fixture seeded no DB_ADMIN account at all — see C-09.
+
+**Worth keeping.** A comment asserting what a hash decodes to is a claim, not a fact, and
+nothing had ever checked it. The same class of bug existed in two unrelated files, independently
+written, because both copied the same wrong source.
+
+---
+
+## C-09 · The automated test suite could not run on Windows at all
+
+**When:** 2026-10-02 · **Status:** Resolved
+
+**Challenge.** Re-running the Phase 8 suite to verify a code change (C-07) on a Windows
+development machine failed before a single test ran: `tests/globalSetup.js` threw
+`db/reset.sh --test failed`, with no further detail — looking exactly like a database
+connectivity problem, especially since this machine *also* had a real, unrelated connectivity
+issue at the time (Windows Application Control blocking `pg_isready.exe`, and earlier,
+`plpgsql.dll`).
+
+**Attempted and rejected.** Chasing the Application Control angle first, since it was the known,
+already-diagnosed problem on this machine. A local shim for `pg_isready` fixed that half, but
+the suite still failed identically — same empty error, no stdout, no stderr.
+
+**Diagnosis.** `execFileSync('./db/reset.sh', …)` asks Windows' `CreateProcess` to resolve and
+run a file whose only indication of how to execute it is a `#!/usr/bin/env bash` shebang line.
+Windows has no concept of a shebang; `CreateProcess` fails with `EFTYPE` before the script's own
+logic ever runs — which also explains the empty stdout/stderr, since nothing was ever spawned.
+This is unrelated to the Application Control issue, and would have failed on this machine even
+with that fully resolved. `SRS.md` §2.4 states the host as "Linux or macOS" — the suite had
+never actually been exercised against `npm test` on the OS a Windows-based grader might use.
+
+**Solution.** Invoke `bash ./db/reset.sh --test --quiet` explicitly rather than relying on
+direct shebang execution. This is not a Windows-only branch: it runs identically on Linux and
+macOS, where `bash` is already on `PATH` as a prerequisite of running the script at all. One line
+changed in `tests/globalSetup.js`.
+
+**Also found while fixing this.** `tests/fixtures/sample_data.sql` had never seeded a DB_ADMIN
+account (see C-08), and the suite's `authLimiter` (30 requests/15min, meant to slow
+brute-forcing against a real deployment) was throttling the suite itself once enough tests
+needed a fresh login — both fixed alongside this, since none of the new DB_ADMIN-gating tests
+(C-07) could otherwise run to completion. `tests/setup.js` now raises `AUTH_RATE_LIMIT` for the
+test environment the same way it already lowers `BCRYPT_ROUNDS`.
+
+**Worth keeping.** "The tests can't even start" and "the database is unreachable" produce an
+identical, nearly empty error from this harness. The fix for one is not evidence the other isn't
+also real — this session had both at once, from unrelated causes, on the same machine.
+
+---
+
 ## Template for new entries
 
 ```

@@ -26,7 +26,7 @@
 | P8 | Test suite + generated `test_cases.md` | mid-sem |
 | P9 | UML, normalization doc, contribution records, README, Compose, report, video | mid-sem |
 | P10 | Showcase queries, views, indexes, `index_impact.md` | full |
-| P11 | Remaining frontend: agent dashboard, reports, query catalogue, SQL console, schema, audit | full |
+| P11 | Remaining frontend: agent dashboard, reports, query catalogue, SQL console, schema, audit | full · **SQL console complete early, 2026-10-02 — see §4** |
 | P12 | ML: features, training, prediction service, at-risk integration | full |
 | P13 | DBMS report: normalization, concurrency demo, viva preparation | full |
 
@@ -64,7 +64,7 @@ Post-mid-semester work for the full DBMS submission.
 | W1 | 6 – 12 Oct | **P10** showcase queries q01–q08, views, indexes | A | ⬜ |
 | W2 | 13 – 19 Oct | **P10** queries q09–q15, `EXPLAIN` evidence for two indexes | A | ⬜ |
 | W3 | 20 – 26 Oct | **P11** agent dashboard, reports dashboard with charts | C | ⬜ |
-| W4 | 27 Oct – 2 Nov | **P11** query catalogue screen, read-only SQL console | B, C | ⬜ |
+| W4 | 27 Oct – 2 Nov | **P11** query catalogue screen, read-only SQL console | B, C | ✅ **SQL console complete early (2026-10-02)**, five weeks ahead of slot — DB_ADMIN-only, read-only, with a clickable table/column sidebar that writes into the SQL box. Query catalogue screen not started. |
 | W5 | 3 – 9 Nov | **P11** admin console with preview/commit, audit viewers, live ERD screen | B | ⬜ |
 | W6 | 10 – 16 Nov | **P12** `features.sql`, training notebook, model evaluation on five metrics | D | ⬜ |
 | W7 | 17 – 23 Nov | **P12** prediction service, API wiring, at-risk column | D | ⬜ |
@@ -106,6 +106,42 @@ left before 3 October is **P9 — packaging and paperwork**: Docker Compose, the
 the normalization document, the report PDF and the demonstration video. None of it is
 engineering risk; all of it takes time, and the report and video cannot be rushed on the last
 evening.
+
+### Post-baseline amendments (2026-10-02)
+
+Work done after the §4 snapshot above, the day before the mid-semester deadline. Recorded here
+rather than silently folded into the baseline, per this document's own rule that the plan is
+never back-dated.
+
+- **Security fix — FR-24 restricted to DB_ADMIN.** The trace feature was shipping raw SQL,
+  bound parameter values and full row data to every signed-in role, and to anonymous catalogue
+  browsing. `server/utils/runTraced.js` gained `traceFor(req, trace)`; every route now uses it.
+  Full detail and rationale: `SRS.md` §3.6 (the FR-24/26/27 note) and `architecture.md` §2.1, §3.2.
+- **P11 pulled forward — the custom query console.** Built as FR-26 (read-only ad-hoc SQL) plus
+  FR-27's logging clause, DB_ADMIN-only, five weeks ahead of its W4 slot. The write-capable tier
+  FR-27 originally specified was deliberately not built — see the note at the end of UC-19 in
+  `use_cases.md`.
+- **A real bug found in P3's seed data, not just a security concern.** `db/seed.py`'s
+  `DEMO_PASSWORD_HASH` was commented as bcrypt of `"voyagex-demo"` but was actually an unrelated
+  example hash copied from a tutorial — **no seeded demo account's documented password ever
+  worked.** Fixed in `seed.py` and in the already-seeded database directly. The identical bug
+  existed independently in `tests/fixtures/sample_data.sql` (P8) and is fixed there too, with a
+  `dbadmin@example.test` row added — the fixture previously seeded no DB_ADMIN account at all, so
+  the automated suite had no way to exercise that role via HTTP.
+- **A Windows portability bug in the test harness itself, found running the suite today.**
+  `tests/globalSetup.js` invoked `./db/reset.sh` via `execFileSync('./db/reset.sh', …)`, which
+  asks Windows' `CreateProcess` to resolve a shebang script directly — it cannot, and fails with
+  `EFTYPE`. This means **the automated suite could not run via `npm test` on Windows at all**,
+  undetected until this session actually tried it there. Fixed by invoking `bash ./db/reset.sh`
+  explicitly, which is correct on Linux and macOS too — not a Windows-only branch, just the
+  invocation that works everywhere. This bears directly on NFR-07 ("the system shall run on a
+  clean machine using only the instructions in the README"): the claim had not actually been
+  verified on the OS a grader might be using.
+- **Test suite grown and re-verified.** 6 new tests added covering the DB_ADMIN-only trace gate
+  and the console (TC-A-24 … TC-A-29); `tests/setup.js` raises `AUTH_RATE_LIMIT` for the test
+  run, since the suite now legitimately makes far more than 30 auth requests per run. **101 of
+  101 passing** on a real run against `travel_test`, up from 95; `docs/test_cases.md`
+  regenerated from that run, not hand-edited.
 
 ---
 
@@ -161,9 +197,9 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 |---|---|---|
 | M1 — Requirements and design baselined | 2026-09-26 | ✅ Met |
 | M2 — Database builds from empty with triggers and procedures working | 2026-09-28 | ✅ Met early (26 Sep) — 25 tables, 4 triggers, 2 procedures, 5 roles; concurrency, refund tiers and the privilege matrix all verified |
-| M3 — API returns traced responses on every data route | 2026-09-30 | ✅ Met early (26 Sep) — 9 endpoints, all seven keys, verified |
+| M3 — API returns traced responses on every data route | 2026-09-30 | ✅ Met early (26 Sep) — 9 endpoints, all seven keys, verified. *Narrowed 2026-10-02: traced responses are now DB_ADMIN-only (see §4 amendments); every route still returns the shape, but only to that role.* |
 | M4 — End-to-end feature working (register → search → book → view) | 2026-10-01 | ✅ Met early (26 Sep) — driven end to end in headless Chromium, screenshots in `docs/screenshots/` |
-| M5 — Test suite green, including the concurrency test | 2026-10-02 | ✅ Met early (26 Sep) — 95 passing, including TC-C-01 to TC-C-04 |
+| M5 — Test suite green, including the concurrency test | 2026-10-02 | ✅ Met early (26 Sep) — 95 passing, including TC-C-01 to TC-C-04. **Updated 2026-10-02: 101 passing** after the amendments in §4 — 6 new tests, a Windows portability fix to the harness itself, and two test-data bugs fixed. |
 | M6 — Mid-semester package submitted | 2026-10-03 | ⬜ Pending |
 | M7 — Showcase queries, views and indexes complete | 2026-10-19 | ⬜ Pending |
 | M8 — Full front end complete | 2026-11-09 | ⬜ Pending |
@@ -177,3 +213,4 @@ Updated at the end of each week. *(SEPM requires this separately from the meetin
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-09-26 | Initial baseline: WBS, 7-day sprint plan, semester plan, risk register with 10 risks, milestones |
+| 1.1 | 2026-10-02 | Post-baseline amendments: FR-24 security fix, P11's SQL console built early (W4 pulled to 2026-10-02), a real seed-data bug found and fixed in both `db/seed.py` and the test fixture, a Windows portability bug found and fixed in the test harness itself, test suite grown from 95 to 101 and re-verified |

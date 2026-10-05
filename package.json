@@ -3,7 +3,7 @@
   "version": "0.8.0",
   "private": true,
   "type": "module",
-  "description": "VoyageX \u2014 test runner for the whole project (Phase 8). The dependencies below are the server's runtime packages, needed here because the tests import server modules and Vitest resolves from the repository root rather than from server/node_modules.",
+  "description": "VoyageX — test runner for the whole project (Phase 8). The dependencies below are the server's runtime packages, needed here because the tests import server modules and Vitest resolves from the repository root rather than from server/node_modules.",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
@@ -23,5 +23,8 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
     "zod": "^3.24.1"
+  },
+  "allowScripts": {
+    "bcrypt@5.1.1": true
   }
 }

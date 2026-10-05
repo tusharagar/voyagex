@@ -29,6 +29,11 @@ process.env.PGDATABASE = process.env.PGDATABASE_TEST ?? 'travel_test';
 // Signed tokens are needed by the API tests; this value never leaves the suite.
 process.env.JWT_SECRET ??= 'test-only-secret-not-used-anywhere-else-0123456789';
 process.env.BCRYPT_ROUNDS ??= '4'; // fast on purpose: NFR-05's cost is asserted separately
+// The suite registers and logs in far more than 30 times per run (one register
+// per test via beforeEach, plus logins inside individual tests); the limiter
+// exists to slow brute-forcing against a real deployment, not to throttle a
+// test run against a disposable database.
+process.env.AUTH_RATE_LIMIT ??= '100000';
 
 const FIXTURE = readFileSync(path.join(here, 'fixtures', 'sample_data.sql'), 'utf8');
 

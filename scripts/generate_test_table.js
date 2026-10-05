@@ -47,7 +47,7 @@ const MODULES = [
   [/integration\/concurrency/, 'Integration — concurrency', 'FR-12, NFR-02'],
   [/integration\/triggers/,   'Integration — triggers',    'FR-13, FR-20, FR-21, FR-28'],
   [/integration\/rbac/,       'Integration — RBAC',        'FR-03, NFR-03'],
-  [/integration\/api/,        'Integration — HTTP API',    'FR-01, FR-02, FR-24, NFR-04'],
+  [/integration\/api/,        'Integration — HTTP API',    'FR-01, FR-02, FR-24, FR-26, FR-27, NFR-04'],
 ];
 
 function moduleFor(file) {

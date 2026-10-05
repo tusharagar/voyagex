@@ -40,10 +40,11 @@ BEGIN;
 -- password_hash is bcrypt of "voyagex-demo"; a dummy value for a local test
 -- database, never a real credential.
 INSERT INTO user_account (user_id, email, password_hash, role_id) VALUES
-  (1, 'alice@example.test',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.hK9m', 1),
-  (2, 'bob@example.test',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.hK9m', 1),
-  (3, 'agent@example.test',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.hK9m', 2),
-  (4, 'manager@example.test', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.hK9m', 3);
+  (1, 'alice@example.test',   '$2b$12$gK.BGhtcSq2XQ3TDF742i.3uYnTeEKqIEJJYN.9yzZ0csVd3H/QJe', 1),
+  (2, 'bob@example.test',     '$2b$12$gK.BGhtcSq2XQ3TDF742i.3uYnTeEKqIEJJYN.9yzZ0csVd3H/QJe', 1),
+  (3, 'agent@example.test',   '$2b$12$gK.BGhtcSq2XQ3TDF742i.3uYnTeEKqIEJJYN.9yzZ0csVd3H/QJe', 2),
+  (4, 'manager@example.test', '$2b$12$gK.BGhtcSq2XQ3TDF742i.3uYnTeEKqIEJJYN.9yzZ0csVd3H/QJe', 3),
+  (5, 'dbadmin@example.test', '$2b$12$gK.BGhtcSq2XQ3TDF742i.3uYnTeEKqIEJJYN.9yzZ0csVd3H/QJe', 4);
 
 INSERT INTO branch (branch_id, branch_name, city, phone) VALUES
   (1, 'VoyageX Prayagraj', 'Prayagraj', '9876500001');

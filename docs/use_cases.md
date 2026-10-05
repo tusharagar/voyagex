@@ -44,15 +44,17 @@ own failure mode. If it is down, booking must still work. That boundary is recor
 | UC-15 | Generate Revenue Report | Manager | FR-22 | |
 | UC-16 | Browse Query Catalogue | Manager | FR-23 | |
 | UC-17 | View Schema (ERD) | Manager, DBA | FR-25 | |
-| UC-18 | Run Read-only Query | Manager, DBA | FR-26 | |
-| UC-19 | Execute Admin Query | DBA | FR-27 | |
+| UC-18 | Run Read-only Query | **DBA only** | FR-26 | *(built early, 2026-10-02 — see UC-19, same implementation)* |
+| UC-19 | Execute Admin Query | DB Administrator | FR-26, FR-27 (logging clause only) | *(built early, 2026-10-02 — narrower than originally designed; see the note at the end of UC-19)* |
 | UC-20 | View Audit Log | DBA, Manager | FR-28 | |
 | UC-21 | Predict Cancellation Risk | Agent (← Prediction Service) | FR-29, FR-30 | |
 
 **Included behaviours** (factored out because several use cases share them):
 `Authenticate` (every use case behind a login), `Display Executed SQL` (every data-bearing use
-case — this is FR-24 and it is why it is modelled as `<<include>>` rather than as a UI detail),
-and `Log Privileged Statement`.
+case — this is FR-24 and it is why it is modelled as `<<include>>` rather than as a UI detail —
+*revised 2026-10-02: the API attaches it only when the actor is DB Administrator, so every other
+actor includes the behaviour without ever receiving its output; see the FR-24 note in `SRS.md`
+§3.6*), and `Log Privileged Statement`.
 
 **Extending behaviours:** `Compute Refund` extends *Cancel Booking* (it applies only when the
 cancellation qualifies for a refund); `Record Payment` extends *Book Package*; `Submit Review`
@@ -241,7 +243,7 @@ BR-05 Refund percentage depends only on days remaining before departure. · BR-0
 
 **Alternate flows**
 - **A1 — Period with no data.** Charts render empty with a "no bookings in this period" note; the SQL and its parameters are still displayed.
-- **A2 — Export.** The manager copies the SQL from the trace panel and runs it in the read-only console (UC-18) for ad-hoc variation.
+- **A2 — Export.** *Revised 2026-10-02:* the trace panel this flow refers to is DB_ADMIN-only (see the FR-24 note, `SRS.md` §3.6), so a manager viewing this report does not see it and cannot copy SQL from it. The read-only console (UC-18/19) is itself DB_ADMIN-only for the same reason. A manager wanting ad-hoc variation on a report query has no in-app path today; this alternate flow is retired until that gap is addressed.
 
 **Exception flows**
 - **E1 — Query timeout.** A report exceeding the statement timeout returns an error naming the report; the remaining reports still render.
@@ -253,43 +255,61 @@ BR-05 Refund percentage depends only on days remaining before departure. · BR-0
 
 ## UC-19 — Execute Admin Query
 
+*Rewritten 2026-10-02 to describe what was actually built, five weeks ahead of its planned
+schedule (`project_plan.md` §3, W4). It is narrower than the version below described until this
+revision — no preview/commit, no `app_dbadmin` execution, no rate limiting — and the reasoning
+for each narrowing is given inline. UC-18 "Run Read-only Query" is the same flow under a
+different name; the two were designed as separate tiers and built as one.*
+
 | Field | Value |
 |---|---|
-| **ID** | UC-19 |
+| **ID** | UC-19 (same implementation as UC-18) |
 | **Primary actor** | DB Administrator |
-| **Traces to** | FR-27 · NFR-03, NFR-06 |
-| **Priority** | Could · post-mid-semester |
-| **Note** | The highest-risk operation in the system; the design is built around limiting and recording it. |
+| **Traces to** | FR-26, FR-27 (logging clause only) · NFR-03, NFR-06 |
+| **Priority** | Should/Could · built early |
+| **Note** | The highest-risk-*shaped* operation in the system, built as the lowest-risk version of it that still demonstrates the design: no code path in this use case can write anything, by database grant rather than by application logic. |
 
 **Preconditions**
-1. The actor is authenticated with role `DB_ADMIN`.
-2. The request is served through the `app_dbadmin` pool, which holds `ALL PRIVILEGES` but is **not** a PostgreSQL superuser.
+1. The actor is authenticated with role `DB_ADMIN`. (Not Manager — see the FR-26 note in `SRS.md` §3.6 for why the role was narrowed from the original "manager or administrator".)
+2. `requireRole('DB_ADMIN')` (`server/middleware/auth.js`) has passed — the first of two independent checks; the second is the database grant in step 2 below.
 
-**Trigger** — The administrator submits a SQL statement through the admin console.
+**Trigger** — The administrator submits a SQL statement through the custom-query console (`client/src/pages/AdminQuery.jsx`).
 
 **Main success flow**
 
 | # | Actor action | System response |
 |---|---|---|
-| 1 | Administrator types a statement and submits it | System checks out a dedicated client and opens a transaction |
-| 2 | | System applies `SET LOCAL statement_timeout = '10s'` and `SET LOCAL lock_timeout = '3s'` — the first bounds a long-running statement, the second bounds one blocked behind another session's lock |
-| 3 | | System executes the statement and captures rows, row count and duration |
-| 4 | | **`commit` defaults to `false`**, so the transaction is rolled back and the result is a preview |
-| 5 | | System writes the statement, database role, status, rows affected and duration to `admin_query_log` **on a separate pool connection, outside the caller's transaction** |
-| 6 | Administrator reviews the preview and re-submits with Commit | Steps 1–3 repeat; the transaction commits; a second log row is written |
+| 1 | Administrator types a statement — optionally built with help from the schema sidebar's per-table/per-column **Add** buttons, which insert an identifier at the cursor — and submits it | System checks out a client from `pools.CONSOLE_RO`, authenticated as `sql_console_ro`, **not `app_dbadmin`** |
+| 2 | | System runs `BEGIN READ ONLY`, then the statement, inside that transaction |
+| 3 | | System captures columns, rows, row count and duration |
+| 4 | | System runs `ROLLBACK`, always — there is no commit path. For a `SELECT` this is a no-op; for any other statement it is moot, because step 2's role cannot write regardless (see Exception flow E3) |
+| 5 | | System writes the statement, a fixed `db_role` of `sql_console_ro`, status, rows affected and duration to `admin_query_log`, **on a separate connection** (`pools.DB_ADMIN`) outside the just-rolled-back transaction |
+| 6 | | Result renders as a table in the console; `GET /api/admin/schema` (same connection, not logged — it is the page's own fixed query, not something the administrator authored) powers the clickable table/column sidebar |
 
 **Alternate flows**
-- **A1 — Read-only inspection.** For a `SELECT`, preview and commit are indistinguishable in effect; the administrator normally uses UC-18 instead, which runs under `sql_console_ro`.
-- **A2 — Rate limit reached.** Repeated submissions are throttled; the console reports the limit.
+- **A1 — Read-only inspection.** This *is* what UC-18 described as a separate, lower-risk tier; there is no second, higher-risk tier to fall back to from here. The write-capable preview/commit flow originally designed for this use case (steps once numbered 4–6, offering `commit: true`) was not built — see the note below.
 
 **Exception flows**
-- **E1 — Statement error.** Syntax or constraint errors return the message and character position for display. A log row with status `ERROR` and the error message is still written — failures are as interesting as successes in an audit trail.
-- **E2 — Lock timeout.** The statement is blocked beyond 3 s and is aborted; the log records the failure.
-- **E3 — Attempted escalation.** A statement such as `COPY … TO PROGRAM` is refused by PostgreSQL because `app_dbadmin` is not a superuser. This is precisely why the role is not a superuser: superuser would reach the host shell and bypass every other control in this design. *(NFR-03)*
+- **E1 — Statement error.** Syntax or constraint errors return the database's own message as `{ error, code: 'QUERY_FAILED' }`. A log row with status `ERROR` and the error message is still written — failures are as interesting as successes in an audit trail. Verified by TC-A-26 and TC-A-29.
+- **E2 — Attempted write.** `INSERT`/`UPDATE`/`DELETE`/DDL fails with PostgreSQL's own `cannot execute … in a read-only transaction` or `permission denied` — refused by the `sql_console_ro` grant (`07_roles_grants.sql` §6: `SELECT` and nothing else, anywhere), not by a keyword filter in this route. Verified by TC-A-26.
+- **E3 — Non-DB_ADMIN caller.** A customer, agent or manager gets 403; an unauthenticated caller gets 401. Verified by TC-A-27.
 
 **Postconditions**
-- If committed, the schema or data is changed as instructed; otherwise nothing is changed.
-- **In every case — success, error, preview or commit — one `admin_query_log` row exists.** Because the log is written on a separate connection, a rollback of the audited statement cannot erase the record of it. PostgreSQL has no autonomous transactions; writing the log inside the caller's transaction would make the audit trail disappear exactly when it matters most.
+- Nothing in the schema or data is ever changed by this use case — there is no code path that commits.
+- **In every case — success or error — one `admin_query_log` row exists.** Because the console's own transaction is always rolled back, writing the log on that same connection would erase it along with everything else; the separate `app_dbadmin` connection is what survives. Verified by TC-A-29.
+
+**What this use case originally specified, and why it changed (added 2026-10-02).** The design
+above this note described a two-tier console: UC-18 for read-only inspection under
+`sql_console_ro`, and this use case, UC-19, as a second, write-capable tier under `app_dbadmin`
+with a preview-then-commit workflow, a 10s statement timeout, a 3s lock timeout, and request
+throttling. None of that second tier was built. Two reasons: first, nobody had asked to actually
+use it to write — `app_dbadmin` already has unrestricted write access to the schema through
+ordinary `psql`, which is the tool an administrator reaches for when a write is genuinely needed,
+so a second write path through a web form adds risk without adding capability. Second, a
+raw-SQL write endpoint reachable from a browser is a meaningfully larger blast radius than a
+read-only one, and that cost was judged not worth paying for a feature whose entire read-only
+value UC-18 already delivers. If a write-capable tier is built later, this note is where its
+design should be re-derived from, not the flow above it.
 
 ---
 
@@ -318,3 +338,4 @@ here; these stories restate the mid-semester increment in a form suitable for th
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-09-26 | Initial baseline: 21 use cases, 5 detailed descriptions, 9 user stories |
+| 1.1 | 2026-10-02 | UC-19 rewritten to match the console actually built (read-only only, `sql_console_ro`, no preview/commit); UC-18's actor narrowed to DBA-only and noted as the same implementation as UC-19; UC-15's A2 flow and the `Display Executed SQL` include corrected for FR-24's DB_ADMIN-only gate |

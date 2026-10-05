@@ -70,7 +70,7 @@ justified in ADR-04.
 | Module | Responsibility |
 |---|---|
 | `pages/` | One component per screen; owns its own data fetching and local form state. No global store — the application has no cross-screen state worth the dependency (constraint C-05). |
-| `components/QueryTrace.jsx` | Renders the SQL, bound parameters, row count, timing and optional plan returned with every data response. Collapsed by default. Used on every data page. |
+| `components/QueryTrace.jsx` | Renders the SQL, bound parameters, row count, timing and optional plan returned with every data response. Collapsed by default. *Revised 2026-10-02:* mounted on every data page as originally designed, but the server only ever populates `trace` for a DB_ADMIN session (see `utils/runTraced.js` below) — for every other role the prop is `undefined` and the component renders nothing. See the FR-24 note in `SRS.md` §3.6 for why. |
 | `components/ResultGrid.jsx` | Renders a tabular result from `columns` + `rows`, so an empty result still shows headers. |
 | `components/RoleGuard.jsx` | Hides navigation the current role cannot use. Convenience only — it is *not* the access control; that is in the database (ADR-03). |
 | `api/` | One `fetch` wrapper: attaches the JWT, normalises errors, returns the traced response shape unchanged. |
@@ -81,7 +81,7 @@ justified in ADR-04.
 |---|---|
 | `middleware/auth.js` | Verifies the JWT, attaches `{ userId, role, dbRole }` to the request. |
 | `db/pools.js` | Exports one `pg.Pool` per database role and `poolFor(req)`, which selects the pool from the authenticated role and **defaults to the most restricted pool when there is no session**. |
-| `utils/runTraced.js` | The single choke point for SQL execution. Times the query and returns `{ sql, params, columns, rows, rowCount, executionMs, plan }`. Column names come from `res.fields`, not from the first row, so empty results keep their headers. Every route that touches SQL returns this shape. |
+| `utils/runTraced.js` | The single choke point for SQL execution. Times the query and returns `{ sql, params, columns, rows, rowCount, executionMs, plan }`. Column names come from `res.fields`, not from the first row, so empty results keep their headers. Every route that touches SQL returns this shape. Also exports `traceFor(req, trace)` — the gate that keeps that shape attached to a response only when `req.user.role === 'DB_ADMIN'`, otherwise returning `undefined` so `JSON.stringify` drops the key entirely. |
 | `services/booking.service.js` | Orchestrates multi-statement work: checks out **one** client with `pool.connect()`, holds it across `BEGIN`/`COMMIT`, rolls back on error, releases in `finally`. Calling `BEGIN` on the pool instead of on a client would send each statement to a different physical connection and the transaction would silently do nothing. |
 | `routes/` | Thin HTTP adapters: validate input with `zod`, select the pool, call a query or procedure, return the traced result. |
 | `db/queries.js` | Loads `db/queries/q01..q15.sql` at startup with their comment headers, so the query catalogue shows exactly what runs. |
@@ -140,33 +140,62 @@ first commits, then re-reads. This is the behaviour verified by TC-C-01 and demo
 
 ## 3.2 Audit of privileged SQL
 
+*Implemented 2026-10-02, ahead of its Phase 11 schedule. The design below is what shipped; it is
+simpler than the preview/commit console originally planned in §4 and FR-27 — see the note there
+for why.*
+
 ```
-POST /api/admin/execute
-   ├─ connection A:  BEGIN; SET LOCAL statement_timeout; <statement>;  ROLLBACK | COMMIT
-   └─ connection B:  INSERT INTO admin_query_log (…)      ◄── outside A's transaction
+POST /api/admin/query
+   ├─ connection A (pools.CONSOLE_RO, role sql_console_ro):
+   │     BEGIN READ ONLY; <statement>; ROLLBACK        ◄── always rolled back, never committed
+   └─ connection B (pools.DB_ADMIN, role app_dbadmin):
+         INSERT INTO admin_query_log (…)                ◄── outside A's transaction, every time
 ```
 
 Two connections, deliberately. PostgreSQL has no autonomous transactions, so a log row written
 on connection A would vanish with A's rollback — erasing the audit trail of precisely the
-statements that were reverted.
+statements that were reverted. Connection A never has anything to commit: it authenticates as
+`sql_console_ro`, which the database has granted `SELECT` and nothing else, anywhere
+(`07_roles_grants.sql` §6) — so even a DB_ADMIN session cannot write through this route. That
+grant is the actual control; the `BEGIN READ ONLY` wrapper is belt-and-braces on top of it, not
+a substitute for it.
+
+`GET /api/admin/schema` — the table/column list the console's UI is built on — runs on the same
+connection A, but is not written to `admin_query_log`: it is a fixed query the page issues to
+draw itself, not a statement an administrator authored and ran.
 
 ---
 
 # 4. Screen inventory and build order
 
-| # | Screen | Role | Phase |
-|---|---|---|---|
-| 1 | Login / Register | all | mid-sem |
-| 2 | Package catalogue with filters | all | mid-sem |
-| 3 | Package detail: itinerary, destinations, hotels, departures | all | mid-sem |
-| 4 | Booking flow: select departure → travellers → confirm | customer | mid-sem |
-| 5 | My bookings: list, detail, payments, balance, cancel | customer | mid-sem |
-| 6 | Agent dashboard: all bookings, filters, book-on-behalf, at-risk | agent | later |
-| 7 | Reports: charts, each with its SQL beneath | manager | later |
-| 8 | Query catalogue: 15 queries with Run and full traces | manager | later |
-| 9 | SQL console: read-only / sandbox / execute | manager, DBA | later |
-| 10 | Schema: live ERD + link to conceptual ER model | manager, DBA | later |
-| 11 | Audit log viewers | DBA | later |
+| # | Screen | Role | Phase | Status |
+|---|---|---|---|---|
+| 1 | Login / Register | all | mid-sem | ✅ built |
+| 2 | Package catalogue with filters | all | mid-sem | ✅ built |
+| 3 | Package detail: itinerary, destinations, hotels, departures | all | mid-sem | ✅ built |
+| 4 | Booking flow: select departure → travellers → confirm | customer | mid-sem | ✅ built |
+| 5 | My bookings: list, detail, payments, balance, cancel | customer | mid-sem | ✅ built |
+| 6 | Agent dashboard: all bookings, filters, book-on-behalf, at-risk | agent | later | ⬜ pending |
+| 7 | Reports: charts, each with its SQL beneath | manager | later | ⬜ pending |
+| 8 | Query catalogue: 15 queries with Run and full traces | manager | later | ⬜ pending |
+| 9 | Custom query console (`/admin/query`) | **DB_ADMIN only** | later | ✅ **built early, 2026-10-02** — see note |
+| 10 | Schema: live ERD + link to conceptual ER model | manager, DBA | later | ⬜ pending — a table/column *browser* (`GET /api/admin/schema`) exists as part of row 9, but not the live ERD this row describes |
+| 11 | Audit log viewers | DBA | later | ⬜ pending — `admin_query_log` is populated and can be inspected today by querying it through row 9's console, just not through a dedicated viewer screen |
+
+**Note on row 9.** The console shipped narrower than this row originally specified, by deliberate
+choice rather than oversight:
+
+- **Role.** DB_ADMIN only, not "manager, DBA". A manager's `app_manager` database role was never
+  granted anything beyond catalogue tables (§2.3 of `SRS.md`), so extending the console to
+  managers would have meant widening that role first, for a feature the brief does not require
+  of them.
+- **Capability.** Read-only only — there is no sandbox-then-commit tier and no execute-with-write
+  tier. Every statement runs as `sql_console_ro` inside `BEGIN READ ONLY … ROLLBACK`, always. The
+  write-capable half of the originally planned design (FR-27's preview/confirm/commit flow) was
+  not built: a raw-SQL write path reachable from a web UI is a large increase in blast radius for
+  a coursework demo, and `app_dbadmin` already has unrestricted write access to the schema
+  through ordinary `psql` — this console exists to let an admin *inspect* data, not to be a second
+  way to write it. See `SRS.md` §3.6 for the requirement text this change was made against.
 
 ---
 
@@ -184,7 +213,7 @@ engineering judgement; an unexamined default is a tutorial followed.
 | — | **No ORM, no query builder** | The SQL is the deliverable. *(ADR-01)* |
 | Auth | **bcrypt + jsonwebtoken** | Bcrypt at cost ≥ 10 for password storage (NFR-05); a stateless JWT carries the database role, which is what selects the connection pool. |
 | Validation | **zod** | Rejects malformed input at the route boundary, so procedures receive well-formed arguments. Complements, and does not replace, database constraints. |
-| Hardening | **helmet, cors, express-rate-limit** | Standard headers; CORS restricted to the Vite origin; rate limits on both console routes, which are the only endpoints that run arbitrary SQL. |
+| Hardening | **helmet, cors, express-rate-limit** | Standard headers; CORS restricted to the Vite origin; a tighter limiter on `/api/auth` against brute-forcing. *As of 2026-10-02:* the admin console (`/api/admin/query`, the only endpoint that runs arbitrary SQL) has no rate limiter of its own yet — it is covered only by the general 300/min `/api` limiter. A dedicated, tighter limit is a reasonable follow-up, not yet done. |
 | Frontend | **React 18 + Vite** | Component reuse for `<QueryTrace>`, which appears on every data screen; Vite for instant reload during a compressed schedule. |
 | — | **No Next.js, no SSR** | There is nothing to server-render: the app is authenticated, localhost-only and has no SEO or first-paint requirement. SSR would add a rendering runtime for no benefit. |
 | — | **No Redux/Zustand, no component library** | The only global state is which user is signed in, held in a small React context. A store would be indirection with nothing to manage; a component library would bury the markup an evaluator is meant to read, and every primitive here is short enough to hand-write. |
@@ -379,7 +408,7 @@ values (C-07, NFR-12). All services bind to `127.0.0.1` (C-06).
 | **Correctness under concurrency** | Row lock inside a stored procedure; `CHECK` backstop; verified by TC-C-01 |
 | **Security** | Privilege enforced by PostgreSQL roles (ADR-03); bcrypt password storage; universal parameterisation; non-superuser admin role |
 | **Auditability** | Trigger-written `booking_audit` that the application cannot bypass; `admin_query_log` written outside the audited transaction |
-| **Transparency** | `runTraced` as a single choke point, `<QueryTrace>` on every data screen, ERD generated from the live catalog |
+| **Transparency** | `runTraced` as a single choke point, `<QueryTrace>` on every data screen *for a DB_ADMIN session* (see §3.2 note and `SRS.md` §3.6), ERD generated from the live catalog |
 | **Testability** | Integration tests against a real database; `reset.sh` gives a clean state per suite. Acknowledged limitation: PL/pgSQL logic is not unit-testable in isolation (ADR-02) |
 | **Portability** | Docker Compose; a clean clone runs from the README (NFR-07) |
 | **Modifiability** | Layered, downward-only calls; routes are thin; SQL is centralised in `queries/` and `procedures.sql` |
@@ -392,7 +421,7 @@ values (C-07, NFR-12). All services bind to `127.0.0.1` (C-06).
 |---|---|---|
 | Trigger and procedure logic drifts from application expectations | Silent data errors | Integration tests assert the database-side effects directly, not the API's report of them |
 | `available_seats` drifts from booking reality | Overselling or under-selling | Single writer, `CHECK` constraints, post-seed consistency assertion (ADR-05) |
-| Long-running admin statement blocks the application | Apparent outage | `statement_timeout` and `lock_timeout` on console routes |
+| Long-running admin statement blocks the application | Apparent outage | The 15s `statement_timeout` set on every pool (`db/pools.js`, `shared.statement_timeout`) applies here too — not a console-specific setting, just the same default every role gets. No `lock_timeout` is set anywhere yet; `BEGIN READ ONLY` limits the damage a blocked statement can do, but not how long it can block. |
 | Prediction service unavailable | At-risk view empty | Treated as optional; failures degrade the view, not the request (ADR-04) |
 | Five pools exhaust PostgreSQL connections | Requests queue | Small per-pool maxima; the system is single-user in demonstration |
 
@@ -403,3 +432,4 @@ values (C-07, NFR-12). All services bind to `127.0.0.1` (C-06).
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-09-26 | Initial baseline: layered architecture, module descriptions, technology justification, ADR-01 … ADR-05 |
+| 1.1 | 2026-10-02 | FR-24 restricted to DB_ADMIN (§2.1 component table, §9); custom query console (row 9) built early, read-only only, DB_ADMIN only — §3.2 rewritten to match, §4 note added explaining the narrower-than-planned scope; corrected the console rate-limit and timeout claims in §5 and §10 to what is actually configured |
