@@ -1,0 +1,53 @@
+
+VoyageX – Cancellation Risk Model  (XGBoost)
+=============================================
+Training rows : 2809
+Validation rows: 703
+Best iteration : 80
+scale_pos_weight: 5.27
+
+--- Validation set metrics ---
+ROC-AUC        : 0.7062
+PR-AUC         : 0.3211
+Brier score    : 0.2039   (lower is better; 0 = perfect)
+
+--- 5-fold cross-val AUC ---
+Per-fold       : [0.7179, 0.6953, 0.6853, 0.6984, 0.6757]
+Mean ± std     : 0.6945 ± 0.0141
+
+--- Classification report (threshold = 0.5) ---
+              precision    recall  f1-score   support
+
+   Completed       0.90      0.69      0.78       591
+   Cancelled       0.26      0.59      0.36       112
+
+    accuracy                           0.67       703
+   macro avg       0.58      0.64      0.57       703
+weighted avg       0.80      0.67      0.71       703
+
+--- Confusion matrix ---
+                Pred Completed  Pred Cancelled
+Actual Completed       406                185
+Actual Cancelled        46                 66
+
+--- Feature list (20 features) ---
+  lead_days
+  is_online
+  num_travellers
+  price_per_person
+  duration_days
+  customer_age_at_booking
+  has_special_request
+  is_monsoon_risk
+  month_sin
+  month_cos
+  category_Beach
+  category_Heritage
+  category_Hill
+  category_Pilgrimage
+  category_Urban
+  category_Wildlife
+  payment_mode_CARD
+  payment_mode_CASH
+  payment_mode_NETBANKING
+  payment_mode_UPI
