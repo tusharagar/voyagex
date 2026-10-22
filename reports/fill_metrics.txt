@@ -1,0 +1,41 @@
+
+VoyageX -- Seat-Fill Forecast Model 2A  (Random Forest)
+========================================================
+Rows total  : 817
+Train rows  : 653
+Test rows   : 164
+
+--- Best hyperparameters (RandomizedSearchCV, 50 iter, 5-fold) ---
+n_estimators    : 684
+max_depth       : 13
+min_samples_leaf: 2
+max_features    : 0.5249
+
+--- Out-of-bag R2 (train set) ---
+OOB R2 : 0.4345
+
+--- 5-fold cross-validation RMSE ---
+Per-fold : [0.1037, 0.1105, 0.1063, 0.0925, 0.0876]
+Mean +/- std : 0.1001 +/- 0.0086
+
+--- Test set metrics ---
+MAE  : 0.0791  (7.91 percentage points of fill)
+RMSE : 0.0967  (9.67 percentage points of fill)
+MAPE : 15.91%
+R2   : 0.5523
+
+--- Feature list (14 features) ---
+  total_seats
+  price
+  duration_days
+  start_month
+  is_weekend_start
+  price_ratio
+  price_per_day
+  avg_past_fill
+  package_category_Beach
+  package_category_Heritage
+  package_category_Hill
+  package_category_Pilgrimage
+  package_category_Urban
+  package_category_Wildlife
